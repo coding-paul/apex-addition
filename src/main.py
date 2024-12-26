@@ -4,6 +4,7 @@ import time
 import ctypes
 import threading
 from pynput import mouse, keyboard
+# from tracker import get_current_weapon as tracker_get_current_weapon
 
 QUIT_KEY = "q" # Key to quit the program
 PATTERN_FILE = "recoil_patterns.json" # Relative path to the file containing the recoil-patterns
@@ -22,12 +23,13 @@ def get_absolute_path(path: str) -> str:
   abs_file_path = os.path.join(script_dir, path)
   return abs_file_path
 
-def tracker() -> str:
+def get_current_weapon() -> str:
    print("Tracking...")  # THIS IS AN EXAMPLE, WILL BE REPLACED WITH ACTUAL CODE
-   return "R-301"        # EXAMPLE RETURN VALUE
+  #  return tracker_get_current_weapon() 
+   return "RE-45" 
 
 def load_pattern() -> list:
-    weapon_scan = tracker() # THIS MUST RETURN THE NAME OF THE WEAPON
+    weapon_scan = get_current_weapon() # THIS MUST RETURN THE NAME OF THE WEAPON
     path = get_absolute_path(PATTERN_FILE)
     with open(path, 'r') as file:
         data: dict = json.load(file)
