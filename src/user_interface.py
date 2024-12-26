@@ -4,6 +4,7 @@ import json
 import threading
 import time
 from pynput.mouse import Controller, Button
+import main # Import main app from same directory
 
 is_main_screen = False
 
@@ -77,7 +78,7 @@ def on_press(key):
             print(f"Key pressed: {key.char}, app_running: {app_running}")
             update_label()  # Update the label text
             if app_running:
-                pass # Imnplement the logic to start the app
+                main.main()
     except AttributeError:
         pass
 
