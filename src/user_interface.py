@@ -101,5 +101,8 @@ def start_listener():
     listener = keyboard.Listener(on_press=on_press)
     listener.start()
 
-start_listener()
-show_title_screen()
+
+if __name__ == "__main__":
+    start_listener()
+    show_title_screen()
+    
