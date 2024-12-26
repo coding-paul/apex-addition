@@ -102,7 +102,9 @@ def start_listener():
     listener.start()
 
 
-if __name__ == "__main__":
+def main():
     start_listener()
     show_title_screen()
-    
+
+if __name__ == "__main__":
+    main()
