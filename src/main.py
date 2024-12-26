@@ -1,36 +1,63 @@
+import os
 import json
-from threading import Thread, Event
 import time
-from pynput import keyboard
-from pynput.mouse import Controller, Button
+import threading
+from pynput import mouse, keyboard
 
-mouse = None
-stop_event: Event = None
+QUIT_KEY = "q" # Key to quit the program
+PATTERN_FILE = "recoil_patterns.json" # Relative path to the file containing the recoil-patterns
+SENSITIVITY = 1 # Sensitivity of the mouse movement, 1 is default, 2 is double the movement, 0.5 is half the movement
 
-def load_pattern():
-    with open('pattern.json', 'r') as file:
-        return json.load(file)
+m: mouse.Controller = None
+stop_event = threading.Event()
+
+def quit():
+    print("Exiting...")
+    stop_event.set()
+    return False
+
+def get_absolute_path(path: str) -> str:
+  script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
+  abs_file_path = os.path.join(script_dir, path)
+  return abs_file_path
+
+def tracker() -> str:
+   print("Tracking...")  # THIS IS AN EXAMPLE, WILL BE REPLACED WITH ACTUAL CODE
+   return "12d1asalterNATORasdawa,"        # EXAMPLE RETURN VALUE
+
+def load_pattern() -> list:
+    weapon_scan = tracker() # THIS MUST RETURN THE NAME OF THE WEAPON
+    path = get_absolute_path(PATTERN_FILE)
+    with open(path, 'r') as file:
+        data: dict = json.load(file)
+        patterns = data["recoil_patterns"]
+        for pattern_name in patterns:
+            if pattern_name.lower() in weapon_scan.lower():
+                print(f"Found pattern for {pattern_name}")
+                return patterns[pattern_name]
 
 def move_mouse_pattern():
   pattern = load_pattern()
   for move in pattern:
-      if stop_event.is_set():
-          break
-      mouse.move(move[1], move[2])
-      time.sleep(move[3])
+      # move[0] = x-move, move[1] = y-move, move[2] = delay bewteen moves
+      m.move(move[0] * SENSITIVITY, move[1] * SENSITIVITY)
+      time.sleep(move[2])
 
-def on_click(x, y, button, pressed):
-  if (not stop_event.is_set()) and button == Button.left and pressed:
-      Thread(target=move_mouse_pattern).start()
+def on_mouse_click(x, y, button, pressed): # Example arguments: x=1962 y=1792 button=<Button.left:(4, 2, 0)> pressed=False / True when pressed and False when released
+  if button == mouse.Button.left and pressed:
+      threading.Thread(target=move_mouse_pattern).start()
 
-def main(*args):
-  global mouse, stop_event
+def on_keyboard_click(key):
+  if(key == keyboard.KeyCode.from_char(QUIT_KEY)):
+    return quit()
 
-  stop_event = args[0]
-  mouse = Controller()
-
-  mouse_listener = keyboard.Listener(on_click=on_click)
-  mouse_listener.start()
+def main():
+  print("Running")
+  global m
+  m = mouse.Controller()
+  mouse.Listener(on_click=on_mouse_click).start()
+  keyboard.Listener(on_press=on_keyboard_click).start()
+  stop_event.wait()
 
 if __name__ == '__main__':
   main()
