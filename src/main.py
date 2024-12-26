@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import ctypes
 import threading
 from pynput import mouse, keyboard
 
@@ -23,7 +24,7 @@ def get_absolute_path(path: str) -> str:
 
 def tracker() -> str:
    print("Tracking...")  # THIS IS AN EXAMPLE, WILL BE REPLACED WITH ACTUAL CODE
-   return "12d1asalterNATORasdawa,"        # EXAMPLE RETURN VALUE
+   return "R-301"        # EXAMPLE RETURN VALUE
 
 def load_pattern() -> list:
     weapon_scan = tracker() # THIS MUST RETURN THE NAME OF THE WEAPON
@@ -35,12 +36,13 @@ def load_pattern() -> list:
             if pattern_name.lower() in weapon_scan.lower():
                 print(f"Found pattern for {pattern_name}")
                 return patterns[pattern_name]
+        print(f"Pattern not found for {weapon_scan}")
+        return None
 
 def move_mouse_pattern():
   pattern = load_pattern()
   for move in pattern:
-      # move[0] = x-move, move[1] = y-move, move[2] = delay bewteen moves
-      m.move(move[0] * SENSITIVITY, move[1] * SENSITIVITY)
+      ctypes.windll.user32.mouse_event(0x0001, int(move[0] * SENSITIVITY), int(move[1] * SENSITIVITY), 0, 0)
       time.sleep(move[2])
 
 def on_mouse_click(x, y, button, pressed): # Example arguments: x=1962 y=1792 button=<Button.left:(4, 2, 0)> pressed=False / True when pressed and False when released
