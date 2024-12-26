@@ -1,6 +1,7 @@
 import tkinter as tk
-from pynput import keyboard
 import main # Import main app from same directory
+from pynput import keyboard
+from threading import Thread
 
 is_main_screen = False
 
