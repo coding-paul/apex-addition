@@ -90,8 +90,8 @@ def update_label():
 
 def update_key_label():
     global main_screen, start_stop_key, key_label
-    key_label.config(text=f"Key: {start_stop_key}")
     if main_screen:
+        key_label.config(text=f"Key: {start_stop_key}")
         for widget in main_screen.winfo_children():
             if isinstance(widget, tk.Label) and "Start/Stop Key" in widget.cget("text"):
                 widget.config(text=f"Start/Stop Key: {start_stop_key}")
