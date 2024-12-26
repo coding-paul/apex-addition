@@ -1,17 +1,19 @@
 import tkinter as tk
 import main # Import main app from same directory
 from pynput import keyboard
-from threading import Thread
+from threading import Thread, Event
 
+
+# Tkinter variables
 is_main_screen = False
-
-# Tkinter 
 main_screen = None
 key_label = None
 
-start_stop_key = 'h'  # Default key
+app: Thread = None
+stop_event = Event()
 listener = None
 app_running = False  # New variable to track the state
+start_stop_key = 'h'  # Default key
 
 def show_title_screen():
     global is_main_screen, title_screen, key_label
@@ -68,14 +70,16 @@ def save_key(event):
     update_key_label()  # Update the label to show the new key
 
 def on_press(key):
-    global start_stop_key, app_running
+    global start_stop_key, app_running, app
     try:
         if key.char == start_stop_key:
             app_running = not app_running  # Toggle the state
             print(f"Key pressed: {key.char}, app_running: {app_running}")
             update_label()  # Update the label text
             if app_running:
-                main.main()
+                app = Thread(target=main.main, args=[stop_event]).start()  # Start the main app in a new thread
+            elif app:
+                stop_event.set()  # Stop the main app
     except AttributeError:
         pass
 
