@@ -43,8 +43,6 @@ def live_text_tracking():
             screenshot1 = ImageGrab.grab(bbox1)
             screenshot2 = ImageGrab.grab(bbox2)
 
-            screenshot1.save(get_absolute_path("./screenshots/screenshot1_" + str(uuid.uuid4()) + ".png"))
-
             # Text aus dem Screenshot extrahieren
             weapon1_text = pytesseract.image_to_string(screenshot1).strip()
             weapon2_text = pytesseract.image_to_string(screenshot2).strip()
