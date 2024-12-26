@@ -76,6 +76,8 @@ def on_press(key):
             app_running = not app_running  # Toggle the state
             print(f"Key pressed: {key.char}, app_running: {app_running}")
             update_label()  # Update the label text
+            if app_running:
+                pass # Imnplement the logic to start the app
     except AttributeError:
         pass
 
