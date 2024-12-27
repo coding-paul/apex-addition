@@ -5,21 +5,40 @@ from PIL import Image
 import pytesseract
 import threading
 
-import uuid
-
-# Stelle sicher, dass der Tesseract-Pfad korrekt ist
-pytesseract.pytesseract.tesseract_cmd = r"C:\Users\paul\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
-
 # Definiere den Bereich (x1, y1, x2, y2)
 bbox1 = (1550, 1030, 1675, 1060)
 bbox2 = (1715, 1030, 1815, 1060)
 
-DELAY = 5 # Zeitintervall, um Ressourcen zu schonen in Sekunden
+DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
+
+weapon_lock: threading.Lock = None
 
 current_weapon: str = None
+weapon1_text: str = None
+weapon2_text: str = None
 
-weapon1_text = ""
-weapon2_text = ""
+def main():
+    global weapon_lock
+
+    # Stelle sicher, dass der Tesseract-Pfad korrekt ist
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Users\paul\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+
+    # Create threads for both functions
+    thread1 = threading.Thread(target=live_text_tracking)
+    thread2 = threading.Thread(target=color_checking)
+
+    # Start the threads
+    thread1.start()
+    thread2.start()
+
+    # Create a lock for the current_weapon variable
+    weapon_lock = threading.Lock()
+
+    print("Tracker started")
+
+    # Wait for both threads to complete
+    thread1.join()
+    thread2.join()
 
 def get_absolute_path(path: str) -> str:
   script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
@@ -100,9 +119,11 @@ def color_checking():
                 if color == target_color:
                     print(f"Weapon 2 ({weapon2_text})")
                     update_weapon(weapon2_text)
+                    sucessfull = True
                     break
-                elif not sucessfull:
-                    print("No weapon detected")
+
+            if not sucessfull:
+                print("No weapon detected")
             
             # Time interval to save resources
             time.sleep(DELAY)
@@ -110,19 +131,5 @@ def color_checking():
         print("Color checking stopped.")
 
 if __name__ == "__main__":
-    # Create threads for both functions
-    thread1 = threading.Thread(target=live_text_tracking)
-    thread2 = threading.Thread(target=color_checking)
-
-    # Start the threads
-    thread1.start()
-    thread2.start()
-
-    # Create a lock for the current_weapon variable
-    weapon_lock = threading.Lock()
-
-    print("Tracker started")
-
-    # Wait for both threads to complete
-    thread1.join()
-    thread2.join()
+    main()
+    

@@ -26,7 +26,7 @@ def get_absolute_path(path: str) -> str:
 def get_current_weapon() -> str:
    print("Tracking...")  # THIS IS AN EXAMPLE, WILL BE REPLACED WITH ACTUAL CODE
   #  return tracker_get_current_weapon() 
-   return "RE-45" 
+   return "R-99q" 
 
 def load_pattern() -> list:
     weapon_scan = get_current_weapon() # THIS MUST RETURN THE NAME OF THE WEAPON
