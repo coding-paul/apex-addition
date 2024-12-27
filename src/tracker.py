@@ -5,6 +5,9 @@ from PIL import Image
 import pytesseract
 import threading
 
+# Dont create pycache 
+os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+
 # Definiere den Bereich (x1, y1, x2, y2)
 bbox1 = (1550, 1030, 1675, 1060)
 bbox2 = (1715, 1030, 1815, 1060)
@@ -12,6 +15,7 @@ bbox2 = (1715, 1030, 1815, 1060)
 DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
 
 weapon_lock: threading.Lock = None
+tracker_stop_event: threading.Event = threading.Event()
 
 current_weapon: str = None
 weapon1_text: str = None
@@ -58,6 +62,8 @@ def live_text_tracking():
     global weapon1_text, weapon2_text
     try:
         while True:
+            if tracker_stop_event.is_set():
+                return
             # Screenshot des definierten Bereichs
             screenshot1 = ImageGrab.grab(bbox1)
             screenshot2 = ImageGrab.grab(bbox2)
@@ -99,6 +105,8 @@ def get_color_at_position(x, y):
 def color_checking():
     try:
         while True:
+            if tracker_stop_event.is_set():
+                return
             sucessfull = False
             for (x, y), target_color in coordinates_and_colors_weapon1:
                 # Get the color at the specified position
@@ -132,4 +140,3 @@ def color_checking():
 
 if __name__ == "__main__":
     main()
-    
