@@ -1,4 +1,4 @@
 .vscode
 .venv
 src/test.py
-src/pycache
+src/__pycache__
