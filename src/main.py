@@ -6,9 +6,6 @@ import threading
 from pynput import mouse, keyboard
 from tracker import get_current_weapon as tracker_get_current_weapon, main as tracker_thread, tracker_stop_event
 
-# Dont create pycache 
-os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
-
 DELAY = 0.1 # Time interval to save resources in seconds
 
 QUIT_KEY = "q" # Key to quit the program

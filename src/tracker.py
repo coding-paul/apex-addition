@@ -5,9 +5,6 @@ from PIL import Image
 import pytesseract
 import threading
 
-# Dont create pycache 
-os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
-
 # Definiere den Bereich (x1, y1, x2, y2)
 bbox1 = (1550, 1030, 1675, 1060)
 bbox2 = (1715, 1030, 1815, 1060)
