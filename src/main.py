@@ -71,8 +71,10 @@ def main():
   global m
   m = mouse.Controller()
 
-  mouse.Listener(on_click=on_mouse_click).start()
-  keyboard.Listener(on_press=on_keyboard_click).start()
+  mouse_listener = mouse.Listener(on_click=on_mouse_click)
+  mouse_listener.start()
+  keyboard_listener = keyboard.Listener(on_press=on_keyboard_click)
+  keyboard_listener.start()
   
   # Start the tracker thread
   tracker_thread_instance = threading.Thread(target=tracker_thread)
