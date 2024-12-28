@@ -11,6 +11,9 @@ PATTERN_FILE = "recoil_patterns.json" # Relative path to the file containing the
 SENSITIVITY = 5 # Sensitivity in your apex settings, 5 is default
 
 m: mouse.Controller = None
+is_left_mouse_down: bool = False
+is_right_mouse_down: bool = False
+
 stop_event = threading.Event()
 
 patterns: dict[list] = None
@@ -44,12 +47,23 @@ def move_mouse_pattern():
   if type(pattern) is list:
     print(f"Moving mouse via the pattern: {pattern_name} with a lenght of: {len(pattern)}\n")
     for move in pattern:
+        if not (is_left_mouse_down or is_right_mouse_down): # If the left or right mouse button is not pressed anymore, stop the pattern
+            return
         ctypes.windll.user32.mouse_event(0x0001, int(move[0] * (SENSITIVITY / 5)), int(move[1] * (SENSITIVITY / 5)), 0, 0)
         time.sleep(move[2])
 
 def on_mouse_click(x, y, button, pressed): # Example arguments: x=1962 y=1792 button=<Button.left:(4, 2, 0)> pressed=False / True when pressed and False when released
+  global is_left_mouse_down, is_right_mouse_down
   if button == mouse.Button.left and pressed:
+      is_left_mouse_down = True
       threading.Thread(target=move_mouse_pattern).start()
+  else:
+      is_left_mouse_down = False
+      
+  if button == mouse.Button.right and pressed:
+      is_right_mouse_down = True
+  else:
+      is_right_mouse_down = False
 
 def on_keyboard_click(key):
   if(key == keyboard.KeyCode.from_char(QUIT_KEY)):
