@@ -1,15 +1,18 @@
 import time
 import os
+import json
 from PIL import ImageGrab
 from PIL import Image
 import pytesseract
 import threading
+import utils
 
 # Definiere den Bereich (x1, y1, x2, y2)
 bbox1 = (1550, 1030, 1675, 1060)
 bbox2 = (1715, 1030, 1815, 1060)
 
 DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
+PATTERN_FILE = "recoil_patterns.json"
 
 weapon_lock: threading.Lock = None
 tracker_stop_event: threading.Event = threading.Event()
@@ -35,7 +38,7 @@ def main():
     # Create a lock for the current_weapon variable
     weapon_lock = threading.Lock()
 
-    print("Tracker running...")
+    print("Tracker running...\n")
 
     # Wait for both threads to complete
     thread1.join()
@@ -46,10 +49,26 @@ def get_absolute_path(path: str) -> str:
   abs_file_path = os.path.join(script_dir, path)
   return abs_file_path
 
-def update_weapon(new_weapon: str):
+def update_weapon(new_weapon: str, slot: int): # Only gets called when a new weapon is detected which is not None or an empty string
     global current_weapon
-    with weapon_lock:
-        current_weapon = new_weapon
+
+    # Exeptions where the weapon is sometimes not detected correctly for example R301 -> R-301
+    # Could also implement multiple languages here
+    match(new_weapon):
+        case "R301":
+            new_weapon = "R-301"
+
+    path = utils.get_absolute_path(PATTERN_FILE)
+    with open(path, 'r') as file:
+        data: dict = json.load(file)
+        available_weapons: list[str] = data["weapons"]
+        for weapon in available_weapons:
+            if weapon.lower() in new_weapon.lower():
+                print(f"Found valid Weapon({slot}): {weapon}")
+                with weapon_lock:
+                    current_weapon = weapon
+                return
+        print(f"Tracker did not find valid weapon: {new_weapon} ?")
 
 def get_current_weapon() -> str:
     with weapon_lock:
@@ -115,9 +134,8 @@ def color_checking():
                 color = get_color_at_position(x, y)
                 
                 # Check if the color matches the target color
-                if color == target_color:
-                    print(f"Weapon 1 ({weapon1_text})")
-                    update_weapon(weapon1_text)
+                if color == target_color and weapon1_text != "" and weapon1_text is not None:
+                    update_weapon(weapon1_text, 2)
                     sucessfull = True
                     break
             
@@ -126,9 +144,8 @@ def color_checking():
                 color = get_color_at_position(x, y)
                 
                 # Check if the color matches the target color
-                if color == target_color:
-                    print(f"Weapon 2 ({weapon2_text})")
-                    update_weapon(weapon2_text)
+                if color == target_color and weapon2_text != "" and weapon2_text is not None:
+                    update_weapon(weapon2_text, 2)
                     sucessfull = True
                     break
 
