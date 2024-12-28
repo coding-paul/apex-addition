@@ -161,4 +161,5 @@ def color_checking():
         print("Color checking stopped.")
 
 if __name__ == "__main__":
+    print("\n\n!!!NOT RUNNING MAIN APPLICATION!!!\n")
     main()
