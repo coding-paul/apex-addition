@@ -28,8 +28,10 @@ def get_absolute_path(rel_path: str) -> str:
   return abs_file_path
 
 def load_pattern() -> list:
+    print("Loading pattern...")
     weapon_scan: str = tracker_get_current_weapon()  # THIS MUST RETURN THE NAME OF THE WEAPON
-    if weapon_scan is None:
+    if weapon_scan is None or weapon_scan == "":
+        print("No weapon found")
         return None
     path = utils.get_absolute_path(PATTERN_FILE)
     with open(path, 'r') as file:
@@ -44,13 +46,12 @@ def load_pattern() -> list:
 
 def move_mouse_pattern():
   pattern = load_pattern()
-  print(type(pattern))
-  print(type(pattern) is list)
   if type(pattern) is list:
-    print("Moving mouse")
+    print(f"Moving mouse via a pattern with a lenght of: {len(pattern)}")
     for move in pattern:
         ctypes.windll.user32.mouse_event(0x0001, int(move[0] * (SENSITIVITY / 5)), int(move[1] * (SENSITIVITY / 5)), 0, 0)
         time.sleep(move[2])
+    print("Mouse moved")
   else:
      time.sleep(DELAY)
 
@@ -63,7 +64,7 @@ def on_keyboard_click(key):
     return quit()
 
 def main():
-  print("Running")
+  print("Main application running...")
   global m
   m = mouse.Controller()
 

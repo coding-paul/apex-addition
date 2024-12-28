@@ -35,7 +35,7 @@ def main():
     # Create a lock for the current_weapon variable
     weapon_lock = threading.Lock()
 
-    print("Tracker started")
+    print("Tracker running...")
 
     # Wait for both threads to complete
     thread1.join()
