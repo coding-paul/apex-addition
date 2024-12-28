@@ -4,6 +4,7 @@ import time
 import ctypes
 import threading
 from pynput import mouse, keyboard
+import utils
 from tracker import get_current_weapon as tracker_get_current_weapon, main as tracker_thread, tracker_stop_event
 
 DELAY = 0.1 # Time interval to save resources in seconds
@@ -35,7 +36,7 @@ def load_pattern() -> list:
     weapon_scan: str = get_current_weapon() # THIS MUST RETURN THE NAME OF THE WEAPON
     if weapon_scan is None:
         return None
-    path = get_absolute_path(PATTERN_FILE)
+    path = utils.get_absolute_path(PATTERN_FILE)
     with open(path, 'r') as file:
         data: dict = json.load(file)
         patterns: dict[list] = data["recoil_patterns"]
