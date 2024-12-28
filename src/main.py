@@ -27,13 +27,8 @@ def get_absolute_path(rel_path: str) -> str:
   abs_file_path = os.path.join(script_dir, rel_path)
   return abs_file_path
 
-def get_current_weapon() -> str:
-   print("Tracking...")  # THIS IS AN EXAMPLE, WILL BE REPLACED WITH ACTUAL CODE
-   return tracker_get_current_weapon() 
-  #  return "R-99q" 
-
 def load_pattern() -> list:
-    weapon_scan: str = get_current_weapon() # THIS MUST RETURN THE NAME OF THE WEAPON
+    weapon_scan: str = tracker_get_current_weapon()  # THIS MUST RETURN THE NAME OF THE WEAPON
     if weapon_scan is None:
         return None
     path = utils.get_absolute_path(PATTERN_FILE)
