@@ -135,7 +135,7 @@ def color_checking():
                 
                 # Check if the color matches the target color
                 if color == target_color and weapon1_text != "" and weapon1_text is not None:
-                    update_weapon(weapon1_text, 2)
+                    update_weapon(weapon1_text, 1)
                     sucessfull = True
                     break
             
