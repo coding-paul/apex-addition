@@ -17,12 +17,19 @@ PATTERN_FILE = "recoil_patterns.json"
 weapon_lock: threading.Lock = None
 tracker_stop_event: threading.Event = threading.Event()
 
+available_weapons: list[str] = None
+
 current_weapon: str = None
 weapon1_text: str = None
 weapon2_text: str = None
 
 def main():
-    global weapon_lock
+    global weapon_lock, available_weapons
+
+    path = utils.get_absolute_path(PATTERN_FILE)
+    with open(path, 'r') as file:
+        data: dict = json.load(file)
+        available_weapons = data["weapons"]
 
     # Stelle sicher, dass der Tesseract-Pfad korrekt ist
     pytesseract.pytesseract.tesseract_cmd = r"C:\Users\paul\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
@@ -58,17 +65,13 @@ def update_weapon(new_weapon: str, slot: int): # Only gets called when a new wea
         case "R301":
             new_weapon = "R-301"
 
-    path = utils.get_absolute_path(PATTERN_FILE)
-    with open(path, 'r') as file:
-        data: dict = json.load(file)
-        available_weapons: list[str] = data["weapons"]
-        for weapon in available_weapons:
-            if weapon.lower() in new_weapon.lower():
-                print(f"Found valid Weapon({slot}): {weapon}")
-                with weapon_lock:
-                    current_weapon = weapon
-                return
-        print(f"Tracker did not find valid weapon: {new_weapon} ?")
+    for weapon in available_weapons:
+        if weapon.lower() in new_weapon.lower():
+            print(f"Found valid Weapon({slot}): {weapon}")
+            with weapon_lock:
+                current_weapon = weapon
+            return
+    print(f"Tracker did not find valid weapon: {new_weapon} ?")
 
 def get_current_weapon() -> str:
     with weapon_lock:

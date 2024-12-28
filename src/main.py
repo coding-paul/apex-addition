@@ -13,6 +13,8 @@ SENSITIVITY = 5 # Sensitivity in your apex settings, 5 is default
 m: mouse.Controller = None
 stop_event = threading.Event()
 
+patterns: dict[list] = None
+
 def quit():
     print("Exiting...")
     stop_event.set()
@@ -22,21 +24,15 @@ def quit():
 def load_pattern() -> tuple[list, str]:
     print("\nLoading pattern...")
     weapon_scan: str = tracker_get_current_weapon()  # Is None from beginning but is a valid name of a weapon in the recoil_patterns.json file once a weapon is detected
-    
+
     # No weapon detected yet
     if(weapon_scan is None):
         print("Not any weapon detected yet\n")
         return (None, None)
-    
     # Valid weapon detected
-    path = utils.get_absolute_path(PATTERN_FILE)
-    with open(path, 'r') as file:
-        data: dict = json.load(file)
-        patterns: dict[list] = data["recoil_patterns"]
-        for pattern_name in patterns:
-            if weapon_scan == pattern_name:
-                return (patterns[pattern_name], pattern_name)
-            
+    for pattern_name in patterns:
+        if weapon_scan == pattern_name:
+            return (patterns[pattern_name], pattern_name)
     # Weapon not found -> Should not happen
     print(f"Pattern not found for {weapon_scan}")
     return (None, None)
@@ -61,8 +57,13 @@ def on_keyboard_click(key):
 
 def main():
   print("\n\nMain application running...")
-  global m
+  global m, patterns
   m = mouse.Controller()
+
+  path = utils.get_absolute_path(PATTERN_FILE)
+  with open(path, 'r') as file:
+      data: dict = json.load(file)
+      patterns = data["recoil_patterns"]
 
   mouse_listener = mouse.Listener(on_click=on_mouse_click)
   mouse_listener.start()
