@@ -16,7 +16,7 @@ SECOND_WEAPON_PIXEL = (1820, 1038)
 DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
 PATTERN_FILE = "recoil_patterns.json"
 DEFAULT_RESOLUTION = (1920, 1080) # Define the default resolution of the screen
-USER_RESOLUTION = (1920, 1080) # Actual resolution of the screen
+USER_RESOLUTION = (1920, 1080) # Actual resolution of the screen, this is a default and will get detected automatically
 ACTIVE_COLORS = [
     (90, 110, 40),   # Energie (an) 
     (125, 84, 45),   # Leichte (an)
@@ -155,6 +155,10 @@ def main():
     global weapon_lock, available_weapons
 
     logger.info("Tracker running...\n", color="CYAN")
+
+    with mss.mss() as sct:
+        screenshot = sct.grab(sct.monitors[1])
+        USER_RESOLUTION = (screenshot.width, screenshot.height)
 
     if USER_RESOLUTION != DEFAULT_RESOLUTION:
         global BBOX1, BBOX2, FIRST_WEAPON_PIXEL, SECOND_WEAPON_PIXEL
