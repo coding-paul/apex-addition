@@ -136,6 +136,8 @@ def color_checking():
 def main():
     global weapon_lock, available_weapons
 
+    logger.info("Tracker running...\n", color="CYAN")
+
     if SETTINGS["AUTO-DETECT-RESOLUTION"]["AUTO-DETECT"]:
         with mss.mss() as sct:
             screenshot = sct.grab(sct.monitors[1])
@@ -143,9 +145,11 @@ def main():
     else:
         USER_RESOLUTION = (SETTINGS["AUTO-DETECT-RESOLUTION"]["WIDTH"], SETTINGS["AUTO-DETECT-RESOLUTION"]["HEIGHT"])
 
+    logger.info(f"Resolution: {USER_RESOLUTION}")
+
     if USER_RESOLUTION != DEFAULT_RESOLUTION:
         global BBOX1, BBOX2, FIRST_WEAPON_PIXEL, SECOND_WEAPON_PIXEL
-        logger.info("\nYou are playing on an other resolution than the default 1920x1080\nThis Script will automaticly resize.\n")
+        logger.info("You are playing on an other resolution than the default 1920x1080\nThis Script will automaticly resize to your Resolution.\n")
         BBOX1 = utils.scale_coordinates(BBOX1, DEFAULT_RESOLUTION, USER_RESOLUTION)
         BBOX2 = utils.scale_coordinates(BBOX2, DEFAULT_RESOLUTION, USER_RESOLUTION)
         FIRST_WEAPON_PIXEL = utils.scale_coordinates(FIRST_WEAPON_PIXEL, DEFAULT_RESOLUTION, USER_RESOLUTION)
@@ -155,9 +159,6 @@ def main():
     with open(path, 'r') as file:
         data: dict = json.load(file)
         available_weapons = data["weapons"]
-
-    logger.info("Tracker running...\n", color="CYAN")
-    logger.info(f"Resolution: {USER_RESOLUTION}\n")
 
     # Stelle sicher, dass der Tesseract-Pfad korrekt ist
     pytesseract.pytesseract.tesseract_cmd = r"C:\Users\paul\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
