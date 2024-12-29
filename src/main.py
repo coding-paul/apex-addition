@@ -36,7 +36,7 @@ def load_pattern() -> tuple[list, str]:
         if weapon_scan == pattern_name:
             return (patterns[pattern_name], pattern_name)
     # Weapon not found -> Should not happen
-    logger.error(f"Pattern not found for {weapon_scan}")
+    logger.error(f"\nPattern not found for '{weapon_scan}' this is a bug and SHOULD NOT happen\n")
     return (None, None)
 
 def move_mouse_pattern():
