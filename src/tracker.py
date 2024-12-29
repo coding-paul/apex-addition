@@ -1,7 +1,8 @@
 import time
 import os
 import json
-from PIL import ImageGrab
+import mss
+from PIL import Image
 import pytesseract
 import threading
 import utils
@@ -52,18 +53,24 @@ def live_text_tracking():
         if tracker_stop_event.is_set():
             logger.info("Text checking stopped.")
             return
-        # Screenshot des definierten Bereichs
-        screenshot1 = ImageGrab.grab(BBOX1)
-        screenshot2 = ImageGrab.grab(BBOX2)
+        
+        # Capture the screenshots using mss
+        with mss.mss() as sct:
+            screenshot1 = sct.grab(BBOX1)
+            screenshot2 = sct.grab(BBOX2)
+
+        # Convert mss screenshot to PIL Image
+        img1: Image = Image.frombytes("RGB", screenshot1.size, screenshot1.bgra, "raw", "BGRX")
+        img2: Image = Image.frombytes("RGB", screenshot2.size, screenshot2.bgra, "raw", "BGRX")
+
+        # Extract text from the screenshots using pytesseract
+        weapon1_text = pytesseract.image_to_string(img1).strip()
+        weapon2_text = pytesseract.image_to_string(img2).strip()
 
         # Save screenshots
         # timestamp = int(time.time())
         # screenshot1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
         # screenshot2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
-
-        # Text aus dem Screenshot extrahieren
-        weapon1_text = pytesseract.image_to_string(screenshot1).strip()
-        weapon2_text = pytesseract.image_to_string(screenshot2).strip()
         
         # Zeitintervall, um Ressourcen zu schonen
         time.sleep(DELAY)        
@@ -89,11 +96,12 @@ coordinates_and_colors_weapon2 = [
 ]
 
 def get_color_at_position(x, y):
-    # Define a bounding box that captures only the single pixel at (x, y)
-    area = (x, y, x + 1, y + 1)
-    screenshot = ImageGrab.grab(area)  # Take a screenshot of the single pixel
-    color = screenshot.getpixel((0, 0))  # Get the color of the single pixel
-    return color
+    with mss.mss() as sct:
+        # Define a bounding box that captures only the single pixel at (x, y)
+        bbox = [y, x, y+1, x+1]
+        screenshot = sct.grab(bbox)
+        color = screenshot.pixel(0, 0)  # Get the color of the single pixel
+        return color
 
 def color_checking():
     while True:
