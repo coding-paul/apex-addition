@@ -135,12 +135,12 @@ def color_checking():
 def main():
     global weapon_lock, available_weapons
 
-    if SETTINGS["RESOLUTION"]["AUTO-DETECT"]:
+    if SETTINGS["AUTO-DETECT-RESOLUTION"]["AUTO-DETECT"]:
         with mss.mss() as sct:
             screenshot = sct.grab(sct.monitors[1])
             USER_RESOLUTION = (screenshot.width, screenshot.height)
     else:
-        USER_RESOLUTION = (SETTINGS["RESOLUTION"]["WIDTH"], SETTINGS["RESOLUTION"]["HEIGHT"])
+        USER_RESOLUTION = (SETTINGS["AUTO-DETECT-RESOLUTION"]["WIDTH"], SETTINGS["AUTO-DETECT-RESOLUTION"]["HEIGHT"])
 
     if USER_RESOLUTION != DEFAULT_RESOLUTION:
         global BBOX1, BBOX2, FIRST_WEAPON_PIXEL, SECOND_WEAPON_PIXEL

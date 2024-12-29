@@ -1,8 +1,8 @@
 {
   "QUIT_KEY": "q",
-  "SENSITIVITY": 5,
-  "TRACKER_DELAY": 1,
-  "RESOLUTION": {
+  "SENSITIVITY": 5.0,
+  "TRACKER_DELAY": 1.0,
+  "AUTO-DETECT-RESOLUTION": {
     "AUTO-DETECT": true,
     "WIDTH": null,
     "HEIGHT": null
