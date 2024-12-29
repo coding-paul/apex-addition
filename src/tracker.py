@@ -7,17 +7,17 @@ import pytesseract
 import threading
 import utils
 
+SETTINGS = utils.get_settings()
+
 # Positions to check the weapon texts for the default resolution (x1, y1, x2, y2)
 BBOX1 = (1550, 1030, 1675, 1060)
 BBOX2 = (1715, 1030, 1815, 1060)
 # Positions to check the weapon colors for the default resolution (x1, y1, x2, y2)
 FIRST_WEAPON_PIXEL = (1678, 1038)
 SECOND_WEAPON_PIXEL = (1820, 1038)
-DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
-PATTERN_FILE = "recoil_patterns.json"
-QUIT_KEY = "q" # Key to quit the program
 DEFAULT_RESOLUTION = (1920, 1080) # Define the default resolution of the screen
 USER_RESOLUTION = (1920, 1080) # Actual resolution of the screen, this is a default and will get detected automatically
+
 ACTIVE_COLORS = [
     (90, 110, 40),   # Energie (an) 
     (125, 84, 45),   # Leichte (an)
@@ -99,7 +99,7 @@ def live_text_tracking():
         # img2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
         
         # Zeitintervall, um Ressourcen zu schonen
-        time.sleep(DELAY)        
+        time.sleep(SETTINGS["TRACKER_DELAY"])        
 
 def color_checking():
     while True:
@@ -129,15 +129,18 @@ def color_checking():
             else:
                 logger.warn("No weapon detected")
         # Time interval to save resources
-        time.sleep(DELAY)
+        time.sleep(SETTINGS["TRACKER_DELAY"])
     
 
 def main():
     global weapon_lock, available_weapons
 
-    with mss.mss() as sct:
-        screenshot = sct.grab(sct.monitors[1])
-        USER_RESOLUTION = (screenshot.width, screenshot.height)
+    if SETTINGS["RESOLUTION"]["AUTO-DETECT"]:
+        with mss.mss() as sct:
+            screenshot = sct.grab(sct.monitors[1])
+            USER_RESOLUTION = (screenshot.width, screenshot.height)
+    else:
+        USER_RESOLUTION = (SETTINGS["RESOLUTION"]["WIDTH"], SETTINGS["RESOLUTION"]["HEIGHT"])
 
     if USER_RESOLUTION != DEFAULT_RESOLUTION:
         global BBOX1, BBOX2, FIRST_WEAPON_PIXEL, SECOND_WEAPON_PIXEL
@@ -147,15 +150,15 @@ def main():
         FIRST_WEAPON_PIXEL = utils.scale_coordinates(FIRST_WEAPON_PIXEL, DEFAULT_RESOLUTION, USER_RESOLUTION)
         SECOND_WEAPON_PIXEL = utils.scale_coordinates(SECOND_WEAPON_PIXEL, DEFAULT_RESOLUTION, USER_RESOLUTION)
 
-    path = utils.get_absolute_path(PATTERN_FILE)
+    path = utils.get_absolute_path("recoil_patterns.json")
     with open(path, 'r') as file:
         data: dict = json.load(file)
         available_weapons = data["weapons"]
 
     logger.info("Tracker running...\n", color="CYAN")
     logger.info("Tracker Settings:")
-    logger.info(f"Quit key: {QUIT_KEY}")
-    logger.info(f"Resolution: {USER_RESOLUTION}")
+    for setting in SETTINGS:
+        logger.info(f"{setting}: {SETTINGS[setting]}")
     logger.newline()
 
     # Stelle sicher, dass der Tesseract-Pfad korrekt ist

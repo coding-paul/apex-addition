@@ -6,9 +6,7 @@ from pynput import mouse, keyboard
 import utils
 from tracker import get_current_weapon as tracker_get_current_weapon, main as tracker_thread, tracker_stop_event
 
-QUIT_KEY = "q" # Key to quit the program
-PATTERN_FILE = "recoil_patterns.json" # Relative path to the file containing the recoil-patterns
-SENSITIVITY = 5 # Sensitivity in your apex settings, 5 is default
+SETTINGS = utils.get_settings()
 
 m: mouse.Controller = None
 is_left_mouse_down: bool = False
@@ -48,7 +46,7 @@ def move_mouse_pattern():
     for move in pattern:
         if not is_left_mouse_down or not is_right_mouse_down: # If the left or right mouse button is not pressed anymore, stop the pattern
             return
-        ctypes.windll.user32.mouse_event(0x0001, int(move[0] * (SENSITIVITY / 5)), int(move[1] * (SENSITIVITY / 5)), 0, 0)
+        ctypes.windll.user32.mouse_event(0x0001, int(move[0] * (SETTINGS["SENSITIVITY"] / 5)), int(move[1] * (SETTINGS["SENSITIVITY"] / 5)), 0, 0)
         time.sleep(move[2])
 
 def on_mouse_click(x, y, button, pressed): # Example arguments: x=1962 y=1792 button=<Button.left:(4, 2, 0)> pressed=False / True when pressed and False when released
@@ -68,7 +66,7 @@ def on_mouse_click(x, y, button, pressed): # Example arguments: x=1962 y=1792 bu
      threading.Thread(target=move_mouse_pattern).start()
 
 def on_keyboard_click(key):
-  if(key == keyboard.KeyCode.from_char(QUIT_KEY)):
+  if(key == keyboard.KeyCode.from_char(SETTINGS["QUIT_KEY"])):
     return quit()
 
 def main():
@@ -76,7 +74,7 @@ def main():
   global m, patterns
   m = mouse.Controller()
 
-  path = utils.get_absolute_path(PATTERN_FILE)
+  path = utils.get_absolute_path("recoil_patterns.json")
   with open(path, 'r') as file:
       data: dict = json.load(file)
       patterns = data["recoil_patterns"]
