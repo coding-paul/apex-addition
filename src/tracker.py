@@ -1,5 +1,4 @@
 import time
-import os
 import json
 import mss
 from PIL import Image
