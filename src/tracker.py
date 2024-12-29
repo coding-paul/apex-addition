@@ -7,13 +7,16 @@ import pytesseract
 import threading
 import utils
 
-# Definiere den Bereich (x1, y1, x2, y2)
+# Positions to check the weapon texts for the default resolution (x1, y1, x2, y2)
 BBOX1 = (1550, 1030, 1675, 1060)
 BBOX2 = (1715, 1030, 1815, 1060)
+# Positions to check the weapon colors for the default resolution (x1, y1, x2, y2)
+FIRST_WEAPON_PIXEL = (1678, 1038)
+SECOND_WEAPON_PIXEL = (1820, 1038)
 DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
 PATTERN_FILE = "recoil_patterns.json"
-FIRST_WEAPON_PIXEL = (1678, 1038) # Define the coordinates for the first weapon
-SECOND_WEAPON_PIXEL = (1820, 1038) # Define the coordinates for the second weapon
+DEFAULT_RESOLUTION = (1920, 1080) # Define the default resolution of the screen
+USER_RESOLUTION = (1920, 1080) # Actual resolution of the screen
 ACTIVE_COLORS = [
     (90, 110, 40),   # Energie (an) 
     (125, 84, 45),   # Leichte (an)
@@ -35,6 +38,26 @@ def get_absolute_path(path: str) -> str:
   script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
   abs_file_path = os.path.join(script_dir, path)
   return abs_file_path
+
+def scale_coordinates(original_coords: tuple, from_resolution: tuple[int, int], to_resolution: tuple[int, int]) -> tuple:
+    original_width, original_height = from_resolution
+    new_width, new_height = to_resolution
+
+    width_scaling_factor = new_width / original_width
+    height_scaling_factor = new_height / original_height
+
+    if len(original_coords) == 2:  # Single pixel (x, y)
+        x, y = original_coords
+        new_x = int(x * width_scaling_factor)
+        new_y = int(y * height_scaling_factor)
+        return (new_x, new_y)
+    elif len(original_coords) == 4:  # Bounding box (x1, y1, x2, y2)
+        x1, y1, x2, y2 = original_coords
+        new_x1 = int(x1 * width_scaling_factor)
+        new_y1 = int(y1 * height_scaling_factor)
+        new_x2 = int(x2 * width_scaling_factor)
+        new_y2 = int(y2 * height_scaling_factor)
+        return (new_x1, new_y1, new_x2, new_y2)
 
 def update_weapon(new_weapon: str, slot: int): # Only gets called when a new weapon is detected which is not None or an empty string
     global current_weapon
@@ -136,6 +159,16 @@ def color_checking():
 def main():
     global weapon_lock, available_weapons
 
+    logger.info("Tracker running...\n", color="CYAN")
+
+    if USER_RESOLUTION != DEFAULT_RESOLUTION:
+        global BBOX1, BBOX2, FIRST_WEAPON_PIXEL, SECOND_WEAPON_PIXEL
+        logger.info("\nYou are playing on an other resolution than the default 1920x1080\nThis Script will automaticly resize.\n")
+        BBOX1 = scale_coordinates(BBOX1, DEFAULT_RESOLUTION, USER_RESOLUTION)
+        BBOX2 = scale_coordinates(BBOX2, DEFAULT_RESOLUTION, USER_RESOLUTION)
+        FIRST_WEAPON_PIXEL = scale_coordinates(FIRST_WEAPON_PIXEL, DEFAULT_RESOLUTION, USER_RESOLUTION)
+        SECOND_WEAPON_PIXEL = scale_coordinates(SECOND_WEAPON_PIXEL, DEFAULT_RESOLUTION, USER_RESOLUTION)
+
     path = utils.get_absolute_path(PATTERN_FILE)
     with open(path, 'r') as file:
         data: dict = json.load(file)
@@ -154,8 +187,6 @@ def main():
 
     # Create a lock for the current_weapon variable
     weapon_lock = threading.Lock()
-
-    logger.info("Tracker running...\n", color="CYAN")
 
     # Wait for both threads to complete
     thread1.join()
