@@ -84,6 +84,14 @@ def get_current_weapon() -> str:
     with weapon_lock:
         return current_weapon
 
+def get_color_at_position(x: int, y: int) -> tuple[int, int, int]:
+    with mss.mss() as sct:
+        # Define a bounding box that captures only the single pixel at (x, y)
+        bbox = (x, y, x+1, y+1)
+        screenshot = sct.grab(bbox)
+        color = screenshot.pixel(0, 0)  # Get the color of the single pixel
+        return color
+
 def live_text_tracking():
     global weapon1_text, weapon2_text
     while True:
@@ -112,34 +120,26 @@ def live_text_tracking():
         # Zeitintervall, um Ressourcen zu schonen
         time.sleep(DELAY)        
 
-def get_color_at_position(x: int, y: int) -> tuple[int, int, int]:
-    with mss.mss() as sct:
-        # Define a bounding box that captures only the single pixel at (x, y)
-        bbox = (x, y, x+1, y+1)
-        screenshot = sct.grab(bbox)
-        color = screenshot.pixel(0, 0)  # Get the color of the single pixel
-        return color
-
 def color_checking():
     while True:
         if tracker_stop_event.is_set():
             logger.info("Color checking stopped.")
             return
 
+        x, y = FIRST_WEAPON_PIXEL
+        color = get_color_at_position(x, y)
         for target_color in ACTIVE_COLORS:
             # Get the color at the specified position
-            x, y = FIRST_WEAPON_PIXEL
-            color = get_color_at_position(x, y)
             
             # Check if the color matches the target color
             if color == target_color and weapon1_text != "" and weapon1_text is not None:
                 update_weapon(weapon1_text, 1)
                 break
         else:
+            x, y = SECOND_WEAPON_PIXEL
+            color = get_color_at_position(x, y)
             for target_color in ACTIVE_COLORS:
                 # Get the color at the specified position
-                x, y = SECOND_WEAPON_PIXEL
-                color = get_color_at_position(x, y)
                 
                 # Check if the color matches the target color
                 if color == target_color and weapon2_text != "" and weapon2_text is not None:
