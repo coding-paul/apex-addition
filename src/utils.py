@@ -1,10 +1,6 @@
 import os
+import json
 from typing import Literal
-
-def get_absolute_path(rel_path: str) -> str:
-  script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
-  abs_file_path = os.path.join(script_dir, rel_path)
-  return abs_file_path
 
 available_colors = Literal["BLUE", "CYAN", "GREEN", "YELLOW", "RED"]
 class create_logger():
@@ -58,3 +54,34 @@ class create_logger():
 
     def newline(self):
         print()
+
+def get_absolute_path(rel_path: str) -> str:
+  script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
+  abs_file_path = os.path.join(script_dir, rel_path)
+  return abs_file_path
+
+def scale_coordinates(original_coords: tuple, from_resolution: tuple[int, int], to_resolution: tuple[int, int]) -> tuple:
+    original_width, original_height = from_resolution
+    new_width, new_height = to_resolution
+
+    width_scaling_factor = new_width / original_width
+    height_scaling_factor = new_height / original_height
+
+    if len(original_coords) == 2:  # Single pixel (x, y)
+        x, y = original_coords
+        new_x = int(x * width_scaling_factor)
+        new_y = int(y * height_scaling_factor)
+        return (new_x, new_y)
+    elif len(original_coords) == 4:  # Bounding box (x1, y1, x2, y2)
+        x1, y1, x2, y2 = original_coords
+        new_x1 = int(x1 * width_scaling_factor)
+        new_y1 = int(y1 * height_scaling_factor)
+        new_x2 = int(x2 * width_scaling_factor)
+        new_y2 = int(y2 * height_scaling_factor)
+        return (new_x1, new_y1, new_x2, new_y2)
+    
+def get_settings() -> dict[dict]:
+    path = get_absolute_path("../settings/settings.json")
+    with open(path, "r") as file:
+        return json.load(file)
+    
