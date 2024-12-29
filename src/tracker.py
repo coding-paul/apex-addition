@@ -138,8 +138,8 @@ def main():
         data: dict = json.load(file)
         available_weapons = data["weapons"]
 
-    # Stelle sicher, dass der Tesseract-Pfad korrekt ist
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Users\paul\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+    # CHANGE <USER> USER ON WINDOWS !!!
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Users\<USER>\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
 
     # Create threads for both functions
     thread1 = threading.Thread(target=live_text_tracking)
