@@ -8,48 +8,18 @@ import threading
 import utils
 
 # Definiere den Bereich (x1, y1, x2, y2)
-bbox1 = (1550, 1030, 1675, 1060)
-bbox2 = (1715, 1030, 1815, 1060)
-
+BBOX1 = (1550, 1030, 1675, 1060)
+BBOX2 = (1715, 1030, 1815, 1060)
 DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
 PATTERN_FILE = "recoil_patterns.json"
 
+logger = utils.create_logger("tracker.py")
 weapon_lock: threading.Lock = None
 tracker_stop_event: threading.Event = threading.Event()
-
 available_weapons: list[str] = None
-
 current_weapon: str = None
 weapon1_text: str = None
 weapon2_text: str = None
-
-def main():
-    global weapon_lock, available_weapons
-
-    path = utils.get_absolute_path(PATTERN_FILE)
-    with open(path, 'r') as file:
-        data: dict = json.load(file)
-        available_weapons = data["weapons"]
-
-    # Stelle sicher, dass der Tesseract-Pfad korrekt ist
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Users\paul\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
-
-    # Create threads for both functions
-    thread1 = threading.Thread(target=live_text_tracking)
-    thread2 = threading.Thread(target=color_checking)
-
-    # Start the threads
-    thread1.start()
-    thread2.start()
-
-    # Create a lock for the current_weapon variable
-    weapon_lock = threading.Lock()
-
-    print("Tracker running...\n")
-
-    # Wait for both threads to complete
-    thread1.join()
-    thread2.join()
 
 def get_absolute_path(path: str) -> str:
   script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
@@ -67,11 +37,11 @@ def update_weapon(new_weapon: str, slot: int): # Only gets called when a new wea
 
     for weapon in available_weapons:
         if weapon.lower() in new_weapon.lower():
-            print(f"Found valid Weapon({slot}): {weapon}")
+            logger.info(f"Found valid Weapon({slot}): {weapon}", color="GREEN")
             with weapon_lock:
                 current_weapon = weapon
             return
-    print(f"Tracker did not find valid weapon: {new_weapon} ?")
+    logger.warn(f"Tracker did not find valid weapon: {new_weapon} ?")
 
 def get_current_weapon() -> str:
     with weapon_lock:
@@ -84,8 +54,8 @@ def live_text_tracking():
             if tracker_stop_event.is_set():
                 return
             # Screenshot des definierten Bereichs
-            screenshot1 = ImageGrab.grab(bbox1)
-            screenshot2 = ImageGrab.grab(bbox2)
+            screenshot1 = ImageGrab.grab(BBOX1)
+            screenshot2 = ImageGrab.grab(BBOX2)
 
             # Save screenshots
             # timestamp = int(time.time())
@@ -99,7 +69,7 @@ def live_text_tracking():
             # Zeitintervall, um Ressourcen zu schonen
             time.sleep(DELAY)
     except KeyboardInterrupt:
-        print("Live-Tracking beendet.")
+        logger.info("Live-Tracking beendet.")
 
 # Define the coordinates and the target colors for the first weapon
 coordinates_and_colors_weapon1 = [
@@ -153,13 +123,41 @@ def color_checking():
                     break
 
             if not sucessfull:
-                print("No weapon detected")
+                logger.warn("No weapon detected")
             
             # Time interval to save resources
             time.sleep(DELAY)
     except KeyboardInterrupt:
-        print("Color checking stopped.")
+        logger.info("Color checking stopped.")
+
+def main():
+    global weapon_lock, available_weapons
+
+    path = utils.get_absolute_path(PATTERN_FILE)
+    with open(path, 'r') as file:
+        data: dict = json.load(file)
+        available_weapons = data["weapons"]
+
+    # Stelle sicher, dass der Tesseract-Pfad korrekt ist
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Users\paul\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+
+    # Create threads for both functions
+    thread1 = threading.Thread(target=live_text_tracking)
+    thread2 = threading.Thread(target=color_checking)
+
+    # Start the threads
+    thread1.start()
+    thread2.start()
+
+    # Create a lock for the current_weapon variable
+    weapon_lock = threading.Lock()
+
+    logger.info("Tracker running...\n", color="CYAN")
+
+    # Wait for both threads to complete
+    thread1.join()
+    thread2.join()
 
 if __name__ == "__main__":
-    print("\n\n!!!NOT RUNNING MAIN APPLICATION!!!\n")
+    logger.error("\n\n!!!NOT RUNNING MAIN APPLICATION!!!\n")
     main()

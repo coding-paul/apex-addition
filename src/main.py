@@ -13,31 +13,30 @@ SENSITIVITY = 5 # Sensitivity in your apex settings, 5 is default
 m: mouse.Controller = None
 is_left_mouse_down: bool = False
 is_right_mouse_down: bool = False
-
+logger = utils.create_logger("main.py")
+patterns: dict[list] = None
 stop_event = threading.Event()
 
-patterns: dict[list] = None
-
 def quit():
-    print("Exiting...")
+    logger.info("Exiting...")
     stop_event.set()
     tracker_stop_event.set()
     return False
 
 def load_pattern() -> tuple[list, str]:
-    print("\nLoading pattern...")
+    logger.info("\nLoading pattern...")
     weapon_scan: str = tracker_get_current_weapon()  # Is None from beginning but is a valid name of a weapon in the recoil_patterns.json file once a weapon is detected
 
     # No weapon detected yet
     if(weapon_scan is None):
-        print("Not any weapon detected yet\n")
+        logger.warn("Not any weapon detected yet\n")
         return (None, None)
     # Valid weapon detected
     for pattern_name in patterns:
         if weapon_scan == pattern_name:
             return (patterns[pattern_name], pattern_name)
     # Weapon not found -> Should not happen
-    print(f"Pattern not found for {weapon_scan}")
+    logger.error(f"Pattern not found for {weapon_scan}")
     return (None, None)
 
 def move_mouse_pattern():
@@ -45,7 +44,7 @@ def move_mouse_pattern():
 
   # Found a pattern
   if type(pattern) is list:
-    print(f"Moving mouse via the pattern: {pattern_name} with a lenght of: {len(pattern)}\n")
+    logger.info(f"Moving mouse via the pattern: {pattern_name} with a lenght of: {len(pattern)}\n")
     for move in pattern:
         if not (is_left_mouse_down or is_right_mouse_down): # If the left or right mouse button is not pressed anymore, stop the pattern
             return
@@ -59,7 +58,7 @@ def on_mouse_click(x, y, button, pressed): # Example arguments: x=1962 y=1792 bu
       threading.Thread(target=move_mouse_pattern).start()
   else:
       is_left_mouse_down = False
-      
+
   if button == mouse.Button.right and pressed:
       is_right_mouse_down = True
   else:
@@ -70,7 +69,7 @@ def on_keyboard_click(key):
     return quit()
 
 def main():
-  print("\n\nMain application running...")
+  logger.info("\n\nMain application running...", color="CYAN")
   global m, patterns
   m = mouse.Controller()
 
