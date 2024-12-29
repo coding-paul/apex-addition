@@ -32,8 +32,17 @@ def update_weapon(new_weapon: str, slot: int): # Only gets called when a new wea
     # Exeptions where the weapon is sometimes not detected correctly for example R301 -> R-301
     # Could also implement multiple languages here
     match(new_weapon):
+        case "LSTAR":
+            new_weapon = "L-STAR"
         case "R301":
             new_weapon = "R-301"
+        case "R99":
+            new_weapon = "R-99"
+        case "R59":
+            new_weapon = "R-59"
+        case "RE45":
+            new_weapon = "RE-45"
+        
 
     for weapon in available_weapons:
         if weapon.lower() in new_weapon.lower():
