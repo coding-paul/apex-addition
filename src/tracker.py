@@ -157,10 +157,7 @@ def main():
         available_weapons = data["weapons"]
 
     logger.info("Tracker running...\n", color="CYAN")
-    logger.info("Tracker Settings:")
-    for setting in SETTINGS:
-        logger.info(f"{setting}: {SETTINGS[setting]}")
-    logger.newline()
+    logger.info(f"Resolution: {USER_RESOLUTION}\n")
 
     # Stelle sicher, dass der Tesseract-Pfad korrekt ist
     pytesseract.pytesseract.tesseract_cmd = r"C:\Users\paul\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
