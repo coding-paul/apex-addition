@@ -88,8 +88,8 @@ def live_text_tracking():
 
         # Save screenshots
         # timestamp = int(time.time())
-        # screenshot1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
-        # screenshot2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
+        # img1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
+        # img2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
         
         # Zeitintervall, um Ressourcen zu schonen
         time.sleep(DELAY)        
