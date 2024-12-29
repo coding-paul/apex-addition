@@ -1,7 +1,7 @@
 import time
 import os
 import json
-from PIL import ImageGrab
+import mss
 from PIL import Image
 import pytesseract
 import threading
@@ -12,6 +12,16 @@ BBOX1 = (1550, 1030, 1675, 1060)
 BBOX2 = (1715, 1030, 1815, 1060)
 DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
 PATTERN_FILE = "recoil_patterns.json"
+FIRST_WEAPON_PIXEL = (1678, 1038) # Define the coordinates for the first weapon
+SECOND_WEAPON_PIXEL = (1820, 1038) # Define the coordinates for the second weapon
+ACTIVE_COLORS = [
+    (90, 110, 40),   # Energie (an) 
+    (125, 84, 45),   # Leichte (an)
+    (56, 107, 89),   # Schwere (an)
+    (107, 32, 7),    # Schrot (an)
+    (75, 64, 143),   # Sniper (an)
+    (178, 1, 55),    # ROT (an)
+]
 
 logger = utils.create_logger("tracker.py")
 weapon_lock: threading.Lock = None
@@ -32,8 +42,17 @@ def update_weapon(new_weapon: str, slot: int): # Only gets called when a new wea
     # Exeptions where the weapon is sometimes not detected correctly for example R301 -> R-301
     # Could also implement multiple languages here
     match(new_weapon):
+        case "LSTAR":
+            new_weapon = "L-STAR"
         case "R301":
             new_weapon = "R-301"
+        case "R99":
+            new_weapon = "R-99"
+        case "R59":
+            new_weapon = "R-59"
+        case "RE45":
+            new_weapon = "RE-45"
+        
 
     for weapon in available_weapons:
         if weapon.lower() in new_weapon.lower():
@@ -49,86 +68,70 @@ def get_current_weapon() -> str:
 
 def live_text_tracking():
     global weapon1_text, weapon2_text
-    try:
-        while True:
-            if tracker_stop_event.is_set():
-                return
-            # Screenshot des definierten Bereichs
-            screenshot1 = ImageGrab.grab(BBOX1)
-            screenshot2 = ImageGrab.grab(BBOX2)
+    while True:
+        if tracker_stop_event.is_set():
+            logger.info("Text checking stopped.")
+            return
+        
+        # Capture the screenshots using mss
+        with mss.mss() as sct:
+            screenshot1 = sct.grab(BBOX1)
+            screenshot2 = sct.grab(BBOX2)
 
-            # Save screenshots
-            # timestamp = int(time.time())
-            # screenshot1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
-            # screenshot2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
+        # Convert mss screenshot to PIL Image
+        img1: Image = Image.frombytes("RGB", screenshot1.size, screenshot1.bgra, "raw", "BGRX")
+        img2: Image = Image.frombytes("RGB", screenshot2.size, screenshot2.bgra, "raw", "BGRX")
 
-            # Text aus dem Screenshot extrahieren
-            weapon1_text = pytesseract.image_to_string(screenshot1).strip()
-            weapon2_text = pytesseract.image_to_string(screenshot2).strip()
-            
-            # Zeitintervall, um Ressourcen zu schonen
-            time.sleep(DELAY)
-    except KeyboardInterrupt:
-        logger.info("Live-Tracking beendet.")
+        # Extract text from the screenshots using pytesseract
+        weapon1_text = pytesseract.image_to_string(img1).strip()
+        weapon2_text = pytesseract.image_to_string(img2).strip()
 
-# Define the coordinates and the target colors for the first weapon
-coordinates_and_colors_weapon1 = [
-    ((1678, 1038), (90, 110, 40)),   # Energie (an) 
-    ((1678, 1038), (125, 84, 45)),   # Leichte (an)
-    ((1678, 1038), (56, 107, 89)),   # Schwere (an)
-    ((1678, 1038), (107, 32, 7)),    # Schrot (an)
-    ((1678, 1038), (75, 64, 143)),   # Sniper (an)
-    ((1678, 1038), (178, 1, 55)),    # ROT (an)
-]
+        # Save screenshots
+        # timestamp = int(time.time())
+        # img1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
+        # img2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
+        
+        # Zeitintervall, um Ressourcen zu schonen
+        time.sleep(DELAY)        
 
-# Define the coordinates and the target colors for the second weapon
-coordinates_and_colors_weapon2 = [
-    ((1820, 1038), (90, 110, 40)),   # Energie (an) 
-    ((1820, 1038), (125, 84, 45)),   # Leichte (an)
-    ((1820, 1038), (56, 107, 89)),   # Schwere (an)
-    ((1820, 1038), (107, 32, 7)),    # Schrot (an)
-    ((1820, 1038), (75, 64, 143)),   # Sniper (an)
-    ((1820, 1038), (178, 1, 55)),    # ROT (an)
-]
-
-def get_color_at_position(x, y):
-    screenshot = ImageGrab.grab()
-    color = screenshot.getpixel((x, y))
-    return color
+def get_color_at_position(x: int, y: int) -> tuple[int, int, int]:
+    with mss.mss() as sct:
+        # Define a bounding box that captures only the single pixel at (x, y)
+        bbox = (x, y, x+1, y+1)
+        screenshot = sct.grab(bbox)
+        color = screenshot.pixel(0, 0)  # Get the color of the single pixel
+        return color
 
 def color_checking():
-    try:
-        while True:
-            if tracker_stop_event.is_set():
-                return
-            sucessfull = False
-            for (x, y), target_color in coordinates_and_colors_weapon1:
-                # Get the color at the specified position
-                color = get_color_at_position(x, y)
-                
-                # Check if the color matches the target color
-                if color == target_color and weapon1_text != "" and weapon1_text is not None:
-                    update_weapon(weapon1_text, 1)
-                    sucessfull = True
-                    break
+    while True:
+        if tracker_stop_event.is_set():
+            logger.info("Color checking stopped.")
+            return
+
+        for target_color in ACTIVE_COLORS:
+            # Get the color at the specified position
+            x, y = FIRST_WEAPON_PIXEL
+            color = get_color_at_position(x, y)
             
-            for (x, y), target_color in coordinates_and_colors_weapon2:
+            # Check if the color matches the target color
+            if color == target_color and weapon1_text != "" and weapon1_text is not None:
+                update_weapon(weapon1_text, 1)
+                break
+        else:
+            for target_color in ACTIVE_COLORS:
                 # Get the color at the specified position
+                x, y = SECOND_WEAPON_PIXEL
                 color = get_color_at_position(x, y)
                 
                 # Check if the color matches the target color
                 if color == target_color and weapon2_text != "" and weapon2_text is not None:
                     update_weapon(weapon2_text, 2)
-                    sucessfull = True
                     break
-
-            if not sucessfull:
+            else:
                 logger.warn("No weapon detected")
-            
-            # Time interval to save resources
-            time.sleep(DELAY)
-    except KeyboardInterrupt:
-        logger.info("Color checking stopped.")
+        # Time interval to save resources
+        time.sleep(DELAY)
+    
 
 def main():
     global weapon_lock, available_weapons
