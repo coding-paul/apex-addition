@@ -82,7 +82,15 @@ class App:
         settings_window.geometry("400x300")
         settings_window.resizable(False, False)
 
-        ttk.Label(settings_window, text="Here you can change your settings. Be careful to enter valid values.", wraplength=350).pack(pady=(10, 20))
+        # Create a Canvas and a scrollbar
+        canvas = tk.Canvas(settings_window)
+        scrollbar = ttk.Scrollbar(settings_window, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Create a frame inside the canvas to hold the widgets
+        canvas_frame = ttk.Frame(canvas)
+
+        ttk.Label(canvas_frame, text="Here you can change your settings. Be careful to enter valid values.", wraplength=350).pack(pady=(10, 20))
 
         path = utils.get_absolute_path("../settings/settings.json")
         with open(path, "r") as file:
@@ -90,11 +98,11 @@ class App:
 
         inputs = {}
         for key, value in settings.items():
-            ttk.Label(settings_window, text=f"{key}:").pack(anchor="w", padx=10)
+            ttk.Label(canvas_frame, text=f"{key}:").pack(anchor="w", padx=10)
             if isinstance(value, dict):
                 # Warning label for dictionary settings
-                ttk.Label(settings_window, text=f"⚠️ Be VERY careful when modifying {key}!\nEditing this incorrectly can cause crashes.", foreground="red", wraplength=350).pack(anchor="w", padx=10, pady=(0, 5))
-            input_field = ttk.Entry(settings_window)
+                ttk.Label(canvas_frame, text=f"⚠️ Be VERY careful when modifying {key}!\nEditing this incorrectly can cause crashes.", foreground="red", wraplength=350).pack(anchor="w", padx=10, pady=(0, 5))
+            input_field = ttk.Entry(canvas_frame)
             input_field.insert(0, value)
             input_field.pack(fill="x", padx=10, pady=5)
             inputs[key] = input_field
@@ -125,8 +133,25 @@ class App:
             settings_window.destroy()
             messagebox.showinfo("Info", "Settings saved")
 
-        save_button = ttk.Button(settings_window, text="Save", command=save_settings)
+        save_button = ttk.Button(canvas_frame, text="Save", command=save_settings)
         save_button.pack(pady=20)
+
+        # Add canvas and scrollbar to the settings window
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Create a window on the canvas to contain the frame
+        canvas.create_window((0, 0), window=canvas_frame, anchor="nw")
+
+        # Update the scrollable region of the canvas
+        canvas_frame.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox("all"))
+
+        # Bind the mouse scroll wheel to scroll the canvas
+        def on_mouse_wheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+        canvas.bind_all("<MouseWheel>", on_mouse_wheel)
 
 if __name__ == "__main__":
     root = tk.Tk()
