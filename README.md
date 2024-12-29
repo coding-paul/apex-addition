@@ -48,8 +48,9 @@ To deploy this project:
 3. Select python in that virtual environment as the interpreter in VSCode
 4. Activate the virtual environment
 5. Install the requirements in the requirements.txt file
-6. Launch main.py
-7. The program is now active and will log output to the console
+6. Launch ui.py
+7. Click Start Program
+8. The program is now active and will log output to the console
 
 ## Features
 
