@@ -34,11 +34,6 @@ current_weapon: str = None
 weapon1_text: str = None
 weapon2_text: str = None
 
-def get_absolute_path(path: str) -> str:
-  script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
-  abs_file_path = os.path.join(script_dir, path)
-  return abs_file_path
-
 def scale_coordinates(original_coords: tuple, from_resolution: tuple[int, int], to_resolution: tuple[int, int]) -> tuple:
     original_width, original_height = from_resolution
     new_width, new_height = to_resolution
