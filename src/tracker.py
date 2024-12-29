@@ -15,6 +15,7 @@ FIRST_WEAPON_PIXEL = (1678, 1038)
 SECOND_WEAPON_PIXEL = (1820, 1038)
 DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
 PATTERN_FILE = "recoil_patterns.json"
+QUIT_KEY = "q" # Key to quit the program
 DEFAULT_RESOLUTION = (1920, 1080) # Define the default resolution of the screen
 USER_RESOLUTION = (1920, 1080) # Actual resolution of the screen, this is a default and will get detected automatically
 ACTIVE_COLORS = [
@@ -154,8 +155,6 @@ def color_checking():
 def main():
     global weapon_lock, available_weapons
 
-    logger.info("Tracker running...\n", color="CYAN")
-
     with mss.mss() as sct:
         screenshot = sct.grab(sct.monitors[1])
         USER_RESOLUTION = (screenshot.width, screenshot.height)
@@ -172,6 +171,12 @@ def main():
     with open(path, 'r') as file:
         data: dict = json.load(file)
         available_weapons = data["weapons"]
+
+    logger.info("Tracker running...\n", color="CYAN")
+    logger.info("Tracker Settings:")
+    logger.info(f"Quit key: {QUIT_KEY}")
+    logger.info(f"Resolution: {USER_RESOLUTION}")
+    logger.newline()
 
     # Stelle sicher, dass der Tesseract-Pfad korrekt ist
     pytesseract.pytesseract.tesseract_cmd = r"C:\Users\paul\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
