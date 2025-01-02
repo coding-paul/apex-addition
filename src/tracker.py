@@ -16,7 +16,6 @@ FIRST_WEAPON_PIXEL = (1678, 1038)
 SECOND_WEAPON_PIXEL = (1820, 1038)
 DEFAULT_RESOLUTION = (1920, 1080) # Define the default resolution of the screen
 USER_RESOLUTION = (1920, 1080) # Actual resolution of the screen, this is a default and will get detected automatically
-
 ACTIVE_COLORS = [
     (90, 110, 40),   # Energie (an) 
     (125, 84, 45),   # Leichte (an)
@@ -25,6 +24,9 @@ ACTIVE_COLORS = [
     (75, 64, 143),   # Sniper (an)
     (178, 1, 55),    # ROT (an)
 ]
+
+# Debugging
+SAVE_SCREENSHOTS = False
 
 logger = utils.create_logger("tracker.py")
 weapon_lock: threading.Lock = None
@@ -94,10 +96,10 @@ def live_text_tracking():
         weapon1_text = pytesseract.image_to_string(img1).strip()
         weapon2_text = pytesseract.image_to_string(img2).strip()
 
-        # Save screenshots
-        # timestamp = int(time.time())
-        # img1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
-        # img2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
+        if SAVE_SCREENSHOTS:
+            timestamp = int(time.time())
+            img1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
+            img2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
         
         # Zeitintervall, um Ressourcen zu schonen
         time.sleep(SETTINGS["TRACKER_DELAY"])        
