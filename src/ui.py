@@ -55,7 +55,7 @@ class App:
 
     def start_application(self):
         if self.process is None:
-            path = utils.get_absolute_path("main.py")
+            path = utils.get_absolute_path("recoil_handler.py")
             venv_python = utils.get_absolute_path("../.venv/Scripts/python.exe")
             self.process = subprocess.Popen([venv_python, path])
             messagebox.showinfo("Info", "Application started")

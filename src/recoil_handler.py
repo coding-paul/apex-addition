@@ -91,5 +91,4 @@ def main():
   stop_event.wait()
 
 if __name__ == '__main__':
-  logger.info(f"\nTo quit the application press: '{SETTINGS['QUIT_KEY']}'", color="GREEN")
   main()
