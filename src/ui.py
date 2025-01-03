@@ -43,7 +43,7 @@ class App:
         self.keyboard_listener = keyboard.Listener(on_press=self.on_keyboard_click)
         self.keyboard_listener.start()
 
-        self.process = None
+        self.process: subprocess.Popen = None
 
     def on_keyboard_click(self, key):
         if key == keyboard.KeyCode.from_char(self.SETTINGS["QUIT_KEY"]):
@@ -64,8 +64,10 @@ class App:
 
     def stop_application(self, exit=False):
         if self.process is not None:
-            self.keyboard_controller.press(self.SETTINGS["QUIT_KEY"])
+            self.process.terminate()
+            self.process.wait()
             self.process = None
+            print("\nApplication stopped\n")
             if not exit:
                 messagebox.showinfo("Info", "Application stopped")
         else:
