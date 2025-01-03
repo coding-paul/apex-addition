@@ -15,12 +15,6 @@ logger = utils.create_logger("main.py")
 patterns: dict[list] = None
 stop_event = threading.Event()
 
-def quit():
-    logger.info("Exiting...")
-    stop_event.set()
-    tracker_stop_event.set()
-    return False
-
 def load_pattern() -> tuple[list, str]:
     logger.info("\nLoading pattern...")
     weapon_scan: str = tracker_get_current_weapon()  # Is None from beginning but is a valid name of a weapon in the recoil_patterns.json file once a weapon is detected
@@ -67,11 +61,11 @@ def on_mouse_click(x, y, button, pressed): # Example arguments: x=1962 y=1792 bu
 
 def on_keyboard_click(key):
   if(key == keyboard.KeyCode.from_char(SETTINGS["QUIT_KEY"])):
-    return quit()
+    return utils.quit_program()
 
 def main():
-  logger.info("\n\nMain application running...", color="CYAN")
   global m, patterns
+  logger.info("\n\nMain application running...", color="CYAN")
   m = mouse.Controller()
 
   path = utils.get_absolute_path("recoil_patterns.json")

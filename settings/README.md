@@ -4,6 +4,7 @@ In the settings.json file in this directory the user settins can be adjusted, se
 
 | SETTING                 | DESCRIPTION 
 | ----------------------- | ------------- 
+| TESSERACT_PATH          | Path to your Tesseract installation <br/> Default: Default path to the local tesseract installation, change the user here.
 | QUIT_KEY                | The key used to stop the program <br/> Default: "q"
 | SENSITIVITY             | The sensitivity in the apex settings. This is needed to move the mouse at the right speed <br/> Default: 5
 | TRACKER_DELAY           | Time in seconds between checks of your weapon. This is to save recources <br/> Default: 0.5

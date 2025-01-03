@@ -84,4 +84,11 @@ def get_settings() -> dict[dict]:
     path = get_absolute_path("../settings/settings.json")
     with open(path, "r") as file:
         return json.load(file)
-    
+
+def quit_program(code: int = 0):
+    from recoil_handler import stop_event
+    from tracker import tracker_stop_event
+    stop_event.set()
+    tracker_stop_event.set()
+    print("Quitting program...")
+    return os._exit(code)

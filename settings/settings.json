@@ -1,4 +1,5 @@
 {
+  "TESSERACT_PATH": "C:\\Users\\paul\\AppData\\Local\\Programs\\Tesseract-OCR\\tesseract.exe",
   "QUIT_KEY": "p",
   "SENSITIVITY": 5.0,
   "TRACKER_DELAY": 1.0,

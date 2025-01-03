@@ -110,6 +110,9 @@ class App:
             inputs[key] = input_field
 
         def save_settings():
+            if self.process is not None:
+                messagebox.showwarning("Warning", "Can't save settings when the program is running")
+                return
             for key, input_field in inputs.items():
                 type_of_setting = type(settings[key])
                 new_value = input_field.get()
