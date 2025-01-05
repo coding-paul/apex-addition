@@ -17,7 +17,7 @@ BBOX2 = (1715, 1030, 1815, 1060)
 FIRST_WEAPON_PIXEL = (1678, 1038)
 SECOND_WEAPON_PIXEL = (1820, 1038)
 DEFAULT_RESOLUTION = (1920, 1080) # Define the default resolution of the screen
-USER_RESOLUTION = (1920, 1080) # Actual resolution of the screen, this is a default and will get detected automatically
+USER_RESOLUTION = DEFAULT_RESOLUTION # Actual resolution of the screen, this is a default and will get detected automatically
 ACTIVE_COLORS = [
     (90, 110, 40),   # Energie (an) 
     (125, 84, 45),   # Leichte (an)
