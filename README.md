@@ -24,7 +24,8 @@ Currently, the pynput module is broken on the python versions 3.12 and above. Th
 
 ### Visual Studio Code (VSCode)
 
-A guide on how to download and install **VSCode** can be found [here](https://www.gitkraken.com/blog/vs-code-download)
+A guide on how to download and install **VSCode** can be found [here](https://www.gitkraken.com/blog/vs-code-download)<br/>
+Also the extention python is needed.
 
 ### Apex Legends
 
@@ -44,16 +45,20 @@ Install the project via **git**
 To deploy this project:
 
 1. Open up VSCode on the directory that the project has been installed on
-2. Create a virtual environment 
-3. Select python in that virtual environment as the interpreter in VSCode
-4. Activate the virtual environment
-5. Install the requirements in the requirements.txt file
-6. Launch ui.py
+2. Open up a terminal by clicking **Terminal** at the top and then **New Terminal**
+3. Create a virtual environment using ```python -m venv .venv``` ; the name of the venv must be .venv
+4. Change the pyhton interpreter to the venv python here is how: 
+    1. Open up main.py in the editor by clicking on its name on the left
+    2. In the bottom right click the version next to python and select the python interpreter under the relative path: ".\\.venv\Scripts\python.exe"
+4. Activate the virtual environment using ```.venv\Scripts\activate.bat```
+5. Install the requirements in the requirements.txt file using ```pip install -r requirements.txt```
+6. Launch main.py
 7. Click Start Program
-8. The program is now active and will log output to the console
+8. The program is now active and ready for you to play apex
 
 ## Features
 
+- User interface
 - Automatic resolution detection
 - Automatic active weapon detection
 - Recoil-balancer for different detected weapons
