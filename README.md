@@ -27,6 +27,10 @@ Currently, the pynput module is broken on the python versions 3.12 and above. Th
 A guide on how to download and install **VSCode** can be found [here](https://www.gitkraken.com/blog/vs-code-download)<br/>
 Also the extention python is needed.
 
+### Tesseract
+
+Can be downloaded from the GitHub by UB Mannheim [here](https://github.com/tesseract-ocr/tesseract/releases/download/5.5.0/tesseract-ocr-w64-setup-5.5.0.20241111.exe), install it and save your path if you choose to install it on a different directory then the default local installment
+
 ### Apex Legends
 
 A guide on how to download and install **Apex Legends** can be found [here](https://www.hp.com/us-en/shop/tech-takes/how-to-play-apex-legends-on-pc)
@@ -53,8 +57,9 @@ To deploy this project:
 4. Activate the virtual environment using ```.venv\Scripts\activate.bat```
 5. Install the requirements in the requirements.txt file using ```pip install -r requirements.txt```
 6. Launch main.py
-7. Click Start Program
-8. The program is now active and ready for you to play apex
+7. Click **Change settings** and change the tesseract path to the installation of **Tesseract**, as listed above. If tesserect was installed on the default path, just change the user here. Click **Save Settings**
+8. Click **Start Program**
+9. The program is now active and ready for you to play apex
 
 ## Features
 
