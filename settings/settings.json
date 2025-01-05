@@ -1,11 +1,42 @@
 {
-  "TESSERACT_PATH": "C:\\Users\\Your-User\\AppData\\Local\\Programs\\Tesseract-OCR\\tesseract.exe",
-  "QUIT_KEY": "p",
-  "SENSITIVITY": 5.0,
-  "TRACKER_DELAY": 1.0,
+  "TESSERACT_PATH": {
+    "value": "C:\\Users\\paul\\AppData\\Local\\Programs\\Tesseract-OCR\\tesseract.exe",
+    "description": "Path to the Tesseract installation | Default: Default path to the local tesseract installation, change the user here."
+  },
+  "HOLD_RIGHT": {
+    "value": true,
+    "description": "Use True when holding right mouse button to go into scope, use False when going into scope on press | default: True"
+  },
+  "QUIT_KEY": {
+    "value": "None",
+    "description": "A key used to stop the program | Default: 'None'"
+  },
+  "SENSITIVITY": {
+    "value": 5.0,
+    "description": "The sensitivity in the apex settings. This is needed to move the mouse at the right speed | Default: 5"
+  },
+  "TRACKER_DELAY": {
+    "value": 0.5,
+    "description": "Time in seconds between checks of the held weapon. This is to save recources | Default: 0.5"
+  },
+  "WINDOW_SIZE": {
+    "value": "400x300",
+    "description": "Size of the window in Pixel | Default: '400x300'"
+  },
+  "APEX_MONITOR": {
+    "value": 1.0,
+    "description": "Which monitor apex is played on | Default: 1"
+  },
+  "UI_MONITOR": {
+    "value": 1.0,
+    "description": "Which monitor the ui is printed on, this is for resolution purposes | Default: 1"
+  },
   "AUTO-DETECT-RESOLUTION": {
-    "AUTO-DETECT": true,
-    "WIDTH": null,
-    "HEIGHT": null
+    "value": {
+      "AUTO-DETECT": true,
+      "WIDTH": null,
+      "HEIGHT": null
+    },
+    "description": "Used to specify custom resolution when you dont want the program to auto-detect it. Set the AUTO-DETECT property to false and enter the wanted custom resolution in x and y. | Default: {'AUTO-DETECT': true, 'WIDTH': null, 'HEIGHT': null}"
   }
 }

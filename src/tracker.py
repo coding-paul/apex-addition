@@ -104,7 +104,7 @@ def live_text_tracking():
             img2.save(utils.get_absolute_path(f'screenshots/screenshot2_{timestamp}.png'))
         
         # Zeitintervall, um Ressourcen zu schonen
-        time.sleep(SETTINGS["TRACKER_DELAY"])      
+        time.sleep(SETTINGS["TRACKER_DELAY"]["value"])      
 
     logger.info("Text checking stopped.")
     return  
@@ -133,7 +133,7 @@ def color_checking():
             else:
                 logger.warn("No weapon detected")
         # Time interval to save resources
-        time.sleep(SETTINGS["TRACKER_DELAY"])
+        time.sleep(SETTINGS["TRACKER_DELAY"]["value"])
 
     logger.info("Color checking stopped.")
     return
@@ -147,12 +147,12 @@ def main(ui):
 
     logger.info("Tracker running...\n", color="CYAN")
 
-    if SETTINGS["AUTO-DETECT-RESOLUTION"]["AUTO-DETECT"]:
+    if SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["AUTO-DETECT"]:
         with mss.mss() as sct: # THIS LINE
             screenshot = sct.grab(sct.monitors[1])
             USER_RESOLUTION = (screenshot.width, screenshot.height)
     else:
-        USER_RESOLUTION = (SETTINGS["AUTO-DETECT-RESOLUTION"]["WIDTH"], SETTINGS["AUTO-DETECT-RESOLUTION"]["HEIGHT"])
+        USER_RESOLUTION = (SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["WIDTH"], SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["HEIGHT"])
 
     logger.info(f"Resolution: {USER_RESOLUTION}")
 
@@ -169,7 +169,7 @@ def main(ui):
         data: dict = json.load(file)
         available_weapons = data["weapons"]
 
-    pytesseract.pytesseract.tesseract_cmd = SETTINGS["TESSERACT_PATH"]
+    pytesseract.pytesseract.tesseract_cmd = SETTINGS["TESSERACT_PATH"]["value"]
 
     # Create threads for both functions
     thread1 = threading.Thread(target=live_text_tracking)

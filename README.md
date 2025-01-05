@@ -49,7 +49,7 @@ Install the project via **git**
 To deploy this project:
 
 1. Open up VSCode on the directory that the project has been installed on
-2. Open up a terminal by clicking **Terminal** at the top and then **New Terminal**
+2. Open up a cmd terminal by clicking **Terminal** at the top and then **New Terminal**
 3. Create a virtual environment using ```python -m venv .venv``` ; the name of the venv must be .venv
 4. Change the pyhton interpreter to the venv python here is how: 
     1. Open up main.py in the editor by clicking on its name on the left

@@ -2,12 +2,13 @@ import os
 import json
 from typing import Literal
 
-import ui
-
 available_colors = Literal["BLUE", "CYAN", "GREEN", "YELLOW", "RED"]
 class create_logger():
     def __init__(self, name: str):
         self.name = name
+        self.ui_logging_active = False
+        self.UI = None
+
         self.OKBLUE = '\033[94m'
         self.OKCYAN = '\033[96m'
         self.OKGREEN = '\033[92m'
@@ -18,7 +19,15 @@ class create_logger():
         self.BOLD = '\033[1m'
         self.UNDERLINE = '\033[4m'
 
+    def init_ui_logging(self, UI):
+        if not isinstance(UI):
+            self.error(f"Error when initializing ui for logging, {UI} is not a valid ui class")
+            return
+        self.UI = UI
+        self.ui_logging_active = True
+
     def __log(self, value: str, message_type: str, color: available_colors=None, newline=True):
+        # Remove newlines and the start and end to put them on later on after adding all other pre- and suffixes
         newline_prefix = ""
         newline_suffix = ""
         while value.startswith("\n"):
@@ -28,6 +37,7 @@ class create_logger():
             newline_suffix += "\n"
             value = value[:-1]  # Remove the first leading newline character
 
+        # Gettings prefixes
         color_prefix = {
             "BLUE": self.OKBLUE,
             "CYAN": self.OKCYAN,
@@ -35,15 +45,18 @@ class create_logger():
             "YELLOW": self.WARNING,
             "RED": self.FAIL
         }.get(color, "")
-
         message_prefix = {
             "info": "(I) ",
             "warn": "(W) ",
             "error": "(E) "
         }.get(message_type, "")
 
-        # print(newline_prefix + color_prefix + message_prefix + self.name + "::" + value + self.ENDC + newline_suffix, end="\n" if newline else "") # Full printout line
+        # Actual print statement
         print(newline_prefix + color_prefix + value + self.ENDC + newline_suffix, end="\n" if newline else "") # This is without the message prefix and without the name
+
+        # If there is a UI, also log it to it
+        if self.ui_logging_active:
+            ...
 
     def info(self, content, color: available_colors=None, newline=True):
         self.__log(content, "info", color=color, newline=newline)
@@ -83,11 +96,25 @@ def scale_coordinates(original_coords: tuple, from_resolution: tuple[int, int], 
         return (new_x1, new_y1, new_x2, new_y2)
     
 def get_settings() -> dict[dict]:
+    def __custom_decoder(obj: dict):
+        for key, value in obj.items():
+            # Check if 'value' is present in the current dictionary
+            if isinstance(value, dict) and 'value' in value:
+                # Convert integers to booleans only if description hints a boolean
+                if "True" in value['description'] or "False" in value['description']:
+                    if value['value'] == 1:
+                        value['value'] = True
+                    elif value['value'] == 0:
+                        value['value'] = False
+            # Recursively process nested dictionaries
+            elif isinstance(value, dict):
+                obj[key] = __custom_decoder(value)
+        return obj
     path = get_absolute_path("../settings/settings.json")
     with open(path, "r") as file:
-        return json.load(file)
+        return json.load(file, object_hook=__custom_decoder)
 
-def quit_program(UI: ui.App, exit=False):
+def quit_program(UI, exit=False):
     from recoil_handler import stop_event
     from tracker import tracker_stop_event
     stop_event.set()

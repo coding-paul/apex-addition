@@ -13,9 +13,13 @@ import utils
 
 class App:
     def __init__(self, root: tk.Tk):
+        # Load settings and set variables
+        self.SETTINGS = utils.get_settings()
+        self.process = None
+
         self.root = root
         self.root.title("Apex Addition UI")
-        self.root.geometry("400x300")
+        self.root.geometry(self.SETTINGS["WINDOW_SIZE"]["value"])
         self.root.resizable(False, False)
 
         # Directly scales to the screens resolution
@@ -43,17 +47,6 @@ class App:
         self.settings_button = ttk.Button(self.main_frame, text="Change Settings", command=self.change_settings)
         self.settings_button.pack(fill="x", pady=5)
 
-        # Load settings and keyboard listener
-        self.SETTINGS = utils.get_settings()
-        self.keyboard_controller = keyboard.Controller()
-        self.keyboard_listener = keyboard.Listener(on_press=self.on_keyboard_click)
-        self.keyboard_listener.start()
-
-        self.process = None
-
-    def on_keyboard_click(self, key):
-        if key == keyboard.KeyCode.from_char(self.SETTINGS["QUIT_KEY"]):
-            self.process = None
 
     def on_close(self):
         self.stop_application(exit=True)
@@ -98,20 +91,20 @@ class App:
         # Create a frame inside the canvas to hold the widgets
         canvas_frame = ttk.Frame(canvas)
 
-        ttk.Label(canvas_frame, text="Here you can change your settings. Be careful to enter valid values.", wraplength=350).pack(pady=(10, 20))
+        ttk.Label(canvas_frame, text="Here you can change your settings. Be careful to enter valid values. Press save settings at the bottom to save it", wraplength=350).pack(pady=(10, 20))
 
         path = utils.get_absolute_path("../settings/settings.json")
         with open(path, "r") as file:
             settings = json.load(file)
 
         inputs = {}
-        for key, value in settings.items():
+        for key, setting in settings.items():
             ttk.Label(canvas_frame, text=f"{key}:").pack(anchor="w", padx=10)
-            if isinstance(value, dict):
+            if isinstance(setting["value"], dict):
                 # Warning label for dictionary settings
                 ttk.Label(canvas_frame, text=f"⚠️ Be VERY careful when modifying {key}!\nEditing this incorrectly can cause crashes.", foreground="red", wraplength=350).pack(anchor="w", padx=10, pady=(0, 5))
             input_field = ttk.Entry(canvas_frame)
-            input_field.insert(0, value)
+            input_field.insert(0, str(setting["value"]))
             input_field.pack(fill="x", padx=10, pady=5)
             inputs[key] = input_field
 
@@ -120,15 +113,20 @@ class App:
                 messagebox.showwarning("Warning", "Can't save settings when the program is running")
                 return
             for key, input_field in inputs.items():
-                type_of_setting = type(settings[key])
+                type_of_setting = type(settings[key]["value"])
                 new_value = input_field.get()
                 try:
                     if type_of_setting == str:
-                        pass
+                        new_value = str(new_value)
                     elif type_of_setting in [float, int]:
                         new_value = float(new_value)
                     elif type_of_setting == dict:
                         new_value = ast.literal_eval(new_value)
+                    elif type_of_setting == bool:
+                        if not (new_value == 'True' or new_value == 'False'):
+                            messagebox.showerror("Warning", f"{key} can only be 'True' or 'False'")
+                            return
+                        new_value = new_value == "True"
                     else:
                         messagebox.showerror(
                             "Error", f"Invalid data type for: '{new_value}', expected {type_of_setting}")
@@ -136,7 +134,7 @@ class App:
                 except (ValueError, SyntaxError):
                     messagebox.showwarning("Warning", f"Invalid value for: '{key}'")
                     return
-                settings[key] = new_value
+                settings[key]["value"] = new_value
 
             with open(path, "w") as file:
                 json.dump(settings, file, indent=2)
