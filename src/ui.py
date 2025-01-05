@@ -3,13 +3,15 @@ from tkinter import messagebox
 from tkinter import ttk
 import json
 import ast
-import subprocess
-import utils
+import threading
 from pynput import keyboard
+
+from recoil_handler import main as start_recoil_handler
+import utils
 
 
 class App:
-    def __init__(self, root):
+    def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("Apex Addition UI")
         self.root.geometry("400x300")
@@ -43,7 +45,7 @@ class App:
         self.keyboard_listener = keyboard.Listener(on_press=self.on_keyboard_click)
         self.keyboard_listener.start()
 
-        self.process: subprocess.Popen = None
+        self.process = None
 
     def on_keyboard_click(self, key):
         if key == keyboard.KeyCode.from_char(self.SETTINGS["QUIT_KEY"]):
@@ -55,19 +57,19 @@ class App:
 
     def start_application(self):
         if self.process is None:
-            path = utils.get_absolute_path("recoil_handler.py")
-            venv_python = utils.get_absolute_path("../.venv/Scripts/python.exe")
-            self.process = subprocess.Popen([venv_python, path])
+            self.process = threading.Thread(target=start_recoil_handler, args=(self,))
+            self.process.start()
             messagebox.showinfo("Info", "Application started")
         else:
             messagebox.showwarning("Warning", "Application is already running")
 
-    def stop_application(self, exit=False):
+    def stop_application(self, exit=False, from_utils=False):
+        if not from_utils:
+            utils.quit_program(self, exit) # This will do some stuff and then recall this function
+            return
         if self.process is not None:
-            self.process.terminate()
-            self.process.wait()
             self.process = None
-            print("\nApplication stopped\n")
+            print("\nApplication stopped from ui\n")
             if not exit:
                 messagebox.showinfo("Info", "Application stopped")
         else:

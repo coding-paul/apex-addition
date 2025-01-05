@@ -85,10 +85,11 @@ def get_settings() -> dict[dict]:
     with open(path, "r") as file:
         return json.load(file)
 
-def quit_program(code: int = 0):
+def quit_program(ui, exit=False):
+    from ui import App as UI_Class
+    UI: UI_Class = ui
     from recoil_handler import stop_event
     from tracker import tracker_stop_event
     stop_event.set()
     tracker_stop_event.set()
-    print("Quitting program...")
-    return os._exit(code)
+    UI.stop_application(from_utils=True, exit=exit)

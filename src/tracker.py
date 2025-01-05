@@ -7,6 +7,7 @@ import threading
 import utils
 
 SETTINGS = utils.get_settings()
+UI = None
 
 # Positions to check the weapon texts for the default resolution (x1, y1, x2, y2)
 BBOX1 = (1550, 1030, 1675, 1060)
@@ -94,7 +95,7 @@ def live_text_tracking():
             weapon2_text = pytesseract.image_to_string(img2).strip()
         except (FileNotFoundError, pytesseract.TesseractNotFoundError):
             logger.error("\nWrong tesseract path, go into settings and change it accordingly\n")
-            utils.quit_program()
+            utils.quit_program(UI)
 
         if SAVE_SCREENSHOTS:
             timestamp = int(time.time())
@@ -137,8 +138,11 @@ def color_checking():
     return
     
 
-def main():
-    global weapon_lock, available_weapons
+def main(ui):
+    global UI, weapon_lock, available_weapons, SETTINGS
+    UI = ui
+    SETTINGS = utils.get_settings()
+    tracker_stop_event.clear()
 
     logger.info("Tracker running...\n", color="CYAN")
 
