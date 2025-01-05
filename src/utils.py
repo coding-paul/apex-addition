@@ -2,6 +2,8 @@ import os
 import json
 from typing import Literal
 
+import ui
+
 available_colors = Literal["BLUE", "CYAN", "GREEN", "YELLOW", "RED"]
 class create_logger():
     def __init__(self, name: str):
@@ -85,9 +87,7 @@ def get_settings() -> dict[dict]:
     with open(path, "r") as file:
         return json.load(file)
 
-def quit_program(ui, exit=False):
-    from ui import App as UI_Class
-    UI: UI_Class = ui
+def quit_program(UI: ui.App, exit=False):
     from recoil_handler import stop_event
     from tracker import tracker_stop_event
     stop_event.set()

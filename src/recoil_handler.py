@@ -3,6 +3,7 @@ import time
 import ctypes
 import threading
 from pynput import mouse, keyboard
+
 import utils
 from tracker import get_current_weapon as tracker_get_current_weapon, main as tracker_thread, tracker_stop_event
 

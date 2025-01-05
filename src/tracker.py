@@ -4,6 +4,7 @@ import mss
 from PIL import Image
 import pytesseract
 import threading
+
 import utils
 
 SETTINGS = utils.get_settings()
