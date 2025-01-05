@@ -6,7 +6,7 @@ Recoil is actually a very annoying and unnecessary feature isn't it?
 
 ## Authors
 
-- [@Paul](https://www.github.com/subsea-paul)
+- [@Paul](https://www.github.com/coding-paul)
 - [@Finn](https://www.github.com/Feuerkrabbe)
 
 ## Prerequisites
