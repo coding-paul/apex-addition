@@ -1,5 +1,4 @@
 import time
-import os
 import json
 import mss
 from PIL import Image
@@ -7,13 +6,17 @@ import pytesseract
 import threading
 import utils
 
-# Definiere den Bereich (x1, y1, x2, y2)
+SETTINGS = utils.get_settings()
+UI = None
+
+# Positions to check the weapon texts for the default resolution (x1, y1, x2, y2)
 BBOX1 = (1550, 1030, 1675, 1060)
 BBOX2 = (1715, 1030, 1815, 1060)
-DELAY = 1 # Zeitintervall, um Ressourcen zu schonen in Sekunden
-PATTERN_FILE = "recoil_patterns.json"
-FIRST_WEAPON_PIXEL = (1678, 1038) # Define the coordinates for the first weapon
-SECOND_WEAPON_PIXEL = (1820, 1038) # Define the coordinates for the second weapon
+# Positions to check the weapon colors for the default resolution (x1, y1, x2, y2)
+FIRST_WEAPON_PIXEL = (1678, 1038)
+SECOND_WEAPON_PIXEL = (1820, 1038)
+DEFAULT_RESOLUTION = (1920, 1080) # Define the default resolution of the screen
+USER_RESOLUTION = (1920, 1080) # Actual resolution of the screen, this is a default and will get detected automatically
 ACTIVE_COLORS = [
     (90, 110, 40),   # Energie (an) 
     (125, 84, 45),   # Leichte (an)
@@ -23,6 +26,9 @@ ACTIVE_COLORS = [
     (178, 1, 55),    # ROT (an)
 ]
 
+# Debugging
+SAVE_SCREENSHOTS = False
+
 logger = utils.create_logger("tracker.py")
 weapon_lock: threading.Lock = None
 tracker_stop_event: threading.Event = threading.Event()
@@ -31,17 +37,14 @@ current_weapon: str = None
 weapon1_text: str = None
 weapon2_text: str = None
 
-def get_absolute_path(path: str) -> str:
-  script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
-  abs_file_path = os.path.join(script_dir, path)
-  return abs_file_path
-
 def update_weapon(new_weapon: str, slot: int): # Only gets called when a new weapon is detected which is not None or an empty string
     global current_weapon
 
     # Exeptions where the weapon is sometimes not detected correctly for example R301 -> R-301
     # Could also implement multiple languages here
     match(new_weapon):
+        case "3030" | "50-30" | "30-50" | "50-50":
+            new_weapon = "30-30"
         case "LSTAR":
             new_weapon = "L-STAR"
         case "R301":
@@ -66,13 +69,17 @@ def get_current_weapon() -> str:
     with weapon_lock:
         return current_weapon
 
+def get_color_at_position(x: int, y: int) -> tuple[int, int, int]:
+    with mss.mss() as sct:
+        # Define a bounding box that captures only the single pixel at (x, y)
+        bbox = (x, y, x+1, y+1)
+        screenshot = sct.grab(bbox)
+        color = screenshot.pixel(0, 0)  # Get the color of the single pixel
+        return color
+
 def live_text_tracking():
     global weapon1_text, weapon2_text
-    while True:
-        if tracker_stop_event.is_set():
-            logger.info("Text checking stopped.")
-            return
-        
+    while not tracker_stop_event.is_set():             
         # Capture the screenshots using mss
         with mss.mss() as sct:
             screenshot1 = sct.grab(BBOX1)
@@ -82,46 +89,41 @@ def live_text_tracking():
         img1: Image = Image.frombytes("RGB", screenshot1.size, screenshot1.bgra, "raw", "BGRX")
         img2: Image = Image.frombytes("RGB", screenshot2.size, screenshot2.bgra, "raw", "BGRX")
 
-        # Extract text from the screenshots using pytesseract
-        weapon1_text = pytesseract.image_to_string(img1).strip()
-        weapon2_text = pytesseract.image_to_string(img2).strip()
+        try:
+            # Extract text from the screenshots using pytesseract
+            weapon1_text = pytesseract.image_to_string(img1).strip()
+            weapon2_text = pytesseract.image_to_string(img2).strip()
+        except (FileNotFoundError, pytesseract.TesseractNotFoundError):
+            logger.error("\nWrong tesseract path, go into settings and change it accordingly\n")
+            utils.quit_program(UI)
 
-        # Save screenshots
-        # timestamp = int(time.time())
-        # img1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
-        # img2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
+        if SAVE_SCREENSHOTS:
+            timestamp = int(time.time())
+            img1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
+            img2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
         
         # Zeitintervall, um Ressourcen zu schonen
-        time.sleep(DELAY)        
+        time.sleep(SETTINGS["TRACKER_DELAY"])      
 
-def get_color_at_position(x: int, y: int) -> tuple[int, int, int]:
-    with mss.mss() as sct:
-        # Define a bounding box that captures only the single pixel at (x, y)
-        bbox = (x, y, x+1, y+1)
-        screenshot = sct.grab(bbox)
-        color = screenshot.pixel(0, 0)  # Get the color of the single pixel
-        return color
+    logger.info("Text checking stopped.")
+    return  
 
 def color_checking():
-    while True:
-        if tracker_stop_event.is_set():
-            logger.info("Color checking stopped.")
-            return
-
+    while not tracker_stop_event.is_set():
+        x, y = FIRST_WEAPON_PIXEL
+        color = get_color_at_position(x, y)
         for target_color in ACTIVE_COLORS:
             # Get the color at the specified position
-            x, y = FIRST_WEAPON_PIXEL
-            color = get_color_at_position(x, y)
             
             # Check if the color matches the target color
             if color == target_color and weapon1_text != "" and weapon1_text is not None:
                 update_weapon(weapon1_text, 1)
                 break
         else:
+            x, y = SECOND_WEAPON_PIXEL
+            color = get_color_at_position(x, y)
             for target_color in ACTIVE_COLORS:
                 # Get the color at the specified position
-                x, y = SECOND_WEAPON_PIXEL
-                color = get_color_at_position(x, y)
                 
                 # Check if the color matches the target color
                 if color == target_color and weapon2_text != "" and weapon2_text is not None:
@@ -130,19 +132,44 @@ def color_checking():
             else:
                 logger.warn("No weapon detected")
         # Time interval to save resources
-        time.sleep(DELAY)
+        time.sleep(SETTINGS["TRACKER_DELAY"])
+
+    logger.info("Color checking stopped.")
+    return
     
 
-def main():
-    global weapon_lock, available_weapons
+def main(ui):
+    global UI, weapon_lock, available_weapons, SETTINGS
+    UI = ui
+    SETTINGS = utils.get_settings()
+    tracker_stop_event.clear()
 
-    path = utils.get_absolute_path(PATTERN_FILE)
+    logger.info("Tracker running...\n", color="CYAN")
+
+    if SETTINGS["AUTO-DETECT-RESOLUTION"]["AUTO-DETECT"]:
+        with mss.mss() as sct:
+            screenshot = sct.grab(sct.monitors[1])
+            USER_RESOLUTION = (screenshot.width, screenshot.height)
+    else:
+        USER_RESOLUTION = (SETTINGS["AUTO-DETECT-RESOLUTION"]["WIDTH"], SETTINGS["AUTO-DETECT-RESOLUTION"]["HEIGHT"])
+
+    logger.info(f"Resolution: {USER_RESOLUTION}")
+
+    if USER_RESOLUTION != DEFAULT_RESOLUTION:
+        global BBOX1, BBOX2, FIRST_WEAPON_PIXEL, SECOND_WEAPON_PIXEL
+        logger.info("You are playing on an other resolution than the default 1920x1080\nThis Script will automaticly resize to your Resolution.\n")
+        BBOX1 = utils.scale_coordinates(BBOX1, DEFAULT_RESOLUTION, USER_RESOLUTION)
+        BBOX2 = utils.scale_coordinates(BBOX2, DEFAULT_RESOLUTION, USER_RESOLUTION)
+        FIRST_WEAPON_PIXEL = utils.scale_coordinates(FIRST_WEAPON_PIXEL, DEFAULT_RESOLUTION, USER_RESOLUTION)
+        SECOND_WEAPON_PIXEL = utils.scale_coordinates(SECOND_WEAPON_PIXEL, DEFAULT_RESOLUTION, USER_RESOLUTION)
+
+    path = utils.get_absolute_path("recoil_patterns.json")
     with open(path, 'r') as file:
         data: dict = json.load(file)
         available_weapons = data["weapons"]
 
-    # CHANGE <USER> USER ON WINDOWS !!!
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Users\<USER>\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+    # Stelle sicher, dass der Tesseract-Pfad korrekt ist
+    pytesseract.pytesseract.tesseract_cmd = SETTINGS["TESSERACT_PATH"]
 
     # Create threads for both functions
     thread1 = threading.Thread(target=live_text_tracking)
@@ -154,8 +181,6 @@ def main():
 
     # Create a lock for the current_weapon variable
     weapon_lock = threading.Lock()
-
-    logger.info("Tracker running...\n", color="CYAN")
 
     # Wait for both threads to complete
     thread1.join()
