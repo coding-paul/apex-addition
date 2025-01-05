@@ -4,6 +4,7 @@ from tkinter import ttk
 import json
 import ast
 import threading
+from ctypes import windll
 from pynput import keyboard
 
 from recoil_handler import main as start_recoil_handler
@@ -16,6 +17,9 @@ class App:
         self.root.title("Apex Addition UI")
         self.root.geometry("400x300")
         self.root.resizable(False, False)
+
+        # Directly scales to the screens resolution
+        windll.shcore.SetProcessDpiAwareness(1)
 
         # Styling
         self.style = ttk.Style()
