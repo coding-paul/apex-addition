@@ -140,7 +140,7 @@ def color_checking():
     
 
 def main(ui):
-    global UI, weapon_lock, available_weapons, SETTINGS
+    global UI, weapon_lock, available_weapons, SETTINGS, USER_RESOLUTION
     UI = ui
     SETTINGS = utils.get_settings()
     tracker_stop_event.clear()
@@ -148,7 +148,7 @@ def main(ui):
     logger.info("Tracker running...\n", color="CYAN")
 
     if SETTINGS["AUTO-DETECT-RESOLUTION"]["AUTO-DETECT"]:
-        with mss.mss() as sct:
+        with mss.mss() as sct: # THIS LINE
             screenshot = sct.grab(sct.monitors[1])
             USER_RESOLUTION = (screenshot.width, screenshot.height)
     else:
@@ -169,7 +169,6 @@ def main(ui):
         data: dict = json.load(file)
         available_weapons = data["weapons"]
 
-    # Stelle sicher, dass der Tesseract-Pfad korrekt ist
     pytesseract.pytesseract.tesseract_cmd = SETTINGS["TESSERACT_PATH"]
 
     # Create threads for both functions
