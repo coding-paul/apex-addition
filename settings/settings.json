@@ -29,7 +29,7 @@
   },
   "UI_MONITOR": {
     "value": 1.0,
-    "description": "Which monitor the ui is printed on, this is for resolution purposes | Default: 1"
+    "description": "Which monitor the ui is printed on. | Default: 1"
   },
   "AUTO-DETECT-RESOLUTION": {
     "value": {
