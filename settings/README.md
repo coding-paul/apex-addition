@@ -11,5 +11,5 @@ In the settings.json file in this directory the user settins can be adjusted, se
 | TRACKER_DELAY           | Time in seconds between checks of the held weapon. This is to save recources <br/> Default: 0.5
 | WINDOW_SIZE             | Size of the window in Pixel <br/> Default: "400x300"
 | APEX_MONITOR            | Which monitor apex is played on <br/> Default: 1
-| UI_MONITOR              | Which monitor the ui is printed on, this is for resolution purposes <br/> Default: 1
+| UI_MONITOR              | Which monitor the ui is printed on. <br/> Default: 1
 | AUTO-DETECT-RESOLUTION  | Used to specify custom resolution when you dont want the program to auto-detect it. Set the AUTO-DETECT property to false and enter the wanted custom resolution in x and y. <br/> Default: {"AUTO-DETECT": true, "WIDTH": null, "HEIGHT": null}
