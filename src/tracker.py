@@ -27,7 +27,7 @@ ACTIVE_COLORS = [
 ]
 
 # Debugging
-SAVE_SCREENSHOTS = False
+SAVE_SCREENSHOTS = True
 
 logger = utils.create_logger("tracker.py")
 weapon_lock: threading.Lock = None
@@ -99,8 +99,8 @@ def live_text_tracking():
 
         if SAVE_SCREENSHOTS:
             timestamp = int(time.time())
-            img1.save(utils.get_absolute_path(f'images/screenshot1_{timestamp}.png'))
-            img2.save(utils.get_absolute_path(f'images/screenshot2_{timestamp}.png'))
+            img1.save(utils.get_absolute_path(f'screenshots/screenshot1_{timestamp}.png'))
+            img2.save(utils.get_absolute_path(f'screenshots/screenshot2_{timestamp}.png'))
         
         # Zeitintervall, um Ressourcen zu schonen
         time.sleep(SETTINGS["TRACKER_DELAY"])      
