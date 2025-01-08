@@ -73,7 +73,8 @@ def get_current_weapon() -> str:
 def get_color_at_position(x: int, y: int) -> tuple[int, int, int]:
     with mss.mss() as sct:
         # Define a bounding box that captures only the single pixel at (x, y)
-        bbox = (x, y, x+1, y+1)
+        monitor = sct.monitors[int(SETTINGS["APEX_MONITOR"]["value"])]
+        bbox = (monitor["left"] + x, monitor["top"] + y, monitor["left"] + x + 1, monitor["top"] + y + 1)
         screenshot = sct.grab(bbox)
         color = screenshot.pixel(0, 0)  # Get the color of the single pixel
         return color
@@ -83,7 +84,14 @@ def live_text_tracking():
     while not tracker_stop_event.is_set():             
         # Capture the screenshots using mss
         with mss.mss() as sct:
-            screenshot1 = sct.grab(BBOX1)
+            monitor = sct.monitors[int(SETTINGS["APEX_MONITOR"]["value"])]
+            
+            x1, y1, x2, y2 = BBOX1
+            bbox = (monitor["left"] + x1, monitor["top"] + y1, monitor["left"] + x2, monitor["top"] + y2)
+            screenshot1 = sct.grab(bbox)
+
+            x1, y1, x2, y2 = BBOX2
+            bbox = (monitor["left"] + x1, monitor["top"] + y1, monitor["left"] + x2, monitor["top"] + y2)
             screenshot2 = sct.grab(BBOX2)
 
         # Convert mss screenshot to PIL Image
@@ -148,8 +156,9 @@ def main(ui):
     logger.info("Tracker running...\n", color="CYAN")
 
     if SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["AUTO-DETECT"]:
-        with mss.mss() as sct: # THIS LINE
-            screenshot = sct.grab(sct.monitors[1])
+        with mss.mss() as sct:
+            monitor = sct.monitors[int(SETTINGS["APEX_MONITOR"]["value"])]
+            screenshot = sct.grab(monitor)
             USER_RESOLUTION = (screenshot.width, screenshot.height)
     else:
         USER_RESOLUTION = (SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["WIDTH"], SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["HEIGHT"])
