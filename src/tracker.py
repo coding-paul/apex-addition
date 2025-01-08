@@ -14,21 +14,24 @@ UI = None
 BBOX1 = (1550, 1030, 1675, 1060)
 BBOX2 = (1715, 1030, 1815, 1060)
 # Positions to check the weapon colors for the default resolution (x1, y1, x2, y2)
-FIRST_WEAPON_PIXEL = (1678, 1038)
-SECOND_WEAPON_PIXEL = (1820, 1038)
+FIRST_WEAPON_PIXEL = (1678, 1040)
+SECOND_WEAPON_PIXEL = (1820, 1040)
 DEFAULT_RESOLUTION = (1920, 1080) # Define the default resolution of the screen
 USER_RESOLUTION = DEFAULT_RESOLUTION # Actual resolution of the screen, this is a default and will get detected automatically
 ACTIVE_COLORS = [
-    (90, 110, 40),   # Energie (an) 
-    (125, 84, 45),   # Leichte (an)
-    (56, 107, 89),   # Schwere (an)
-    (107, 32, 7),    # Schrot (an)
-    (75, 64, 143),   # Sniper (an)
-    (178, 1, 55),    # ROT (an)
+    (111, 131, 56),   # Energie (an) 
+    (146, 105, 62),   # Leichte (an)
+    (75, 129, 111),   # Schwere (an)
+    (129, 46, 11),    # Schrot (an)
+    (96, 84, 162),   # Sniper (an)
+    (193, 2, 74),    # ROT (an)
+    (163, 63, 67),   # ROT (an) Color Blind Mode Tritanopia
 ]
 
 # Debugging
 SAVE_SCREENSHOTS = False
+LOG_COLOR = False
+LOG_TEXT = False
 
 logger = utils.create_logger("tracker.py")
 weapon_lock: threading.Lock = None
@@ -75,7 +78,7 @@ def get_color_at_position(x: int, y: int) -> tuple[int, int, int]:
         # Define a bounding box that captures only the single pixel at (x, y)
         monitor = sct.monitors[int(SETTINGS["APEX_MONITOR"]["value"])]
         bbox = (monitor["left"] + x, monitor["top"] + y, monitor["left"] + x + 1, monitor["top"] + y + 1)
-        screenshot = sct.grab(bbox)
+        screenshot = sct.grab((bbox))
         color = screenshot.pixel(0, 0)  # Get the color of the single pixel
         return color
 
@@ -102,6 +105,9 @@ def live_text_tracking():
             # Extract text from the screenshots using pytesseract
             weapon1_text = pytesseract.image_to_string(img1).strip()
             weapon2_text = pytesseract.image_to_string(img2).strip()
+            if LOG_TEXT:
+                logger.info(f"weapon1_text: '{weapon1_text}'")
+                logger.info(f"weapon2_text: '{weapon2_text}'")
         except (FileNotFoundError, pytesseract.TesseractNotFoundError):
             logger.error("\nWrong tesseract path, go into settings and change it accordingly\n")
             utils.quit_program(UI)
@@ -121,6 +127,8 @@ def color_checking():
     while not tracker_stop_event.is_set():
         x, y = FIRST_WEAPON_PIXEL
         color = get_color_at_position(x, y)
+        if LOG_COLOR:
+                logger.info(f"weapon1_color: '{color}'")
         for target_color in ACTIVE_COLORS:
             # Get the color at the specified position
             
@@ -131,6 +139,8 @@ def color_checking():
         else:
             x, y = SECOND_WEAPON_PIXEL
             color = get_color_at_position(x, y)
+            if LOG_COLOR:
+                logger.info(f"weapon2_color: '{color}'")
             for target_color in ACTIVE_COLORS:
                 # Get the color at the specified position
                 
