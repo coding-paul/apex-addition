@@ -1,6 +1,6 @@
 {
   "TESSERACT_PATH": {
-    "value": "C:\\Users\\paul\\AppData\\Local\\Programs\\Tesseract-OCR\\tesseract.exe",
+    "value": "C:\\Users\\YourUser\\AppData\\Local\\Programs\\Tesseract-OCR\\tesseract.exe",
     "description": "Path to the Tesseract installation | Default: Default path to the local tesseract installation, change the user here."
   },
   "HOLD_RIGHT": {
