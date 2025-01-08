@@ -28,7 +28,7 @@ ACTIVE_COLORS = [
 ]
 
 # Debugging
-SAVE_SCREENSHOTS = True
+SAVE_SCREENSHOTS = False
 
 logger = utils.create_logger("tracker.py")
 weapon_lock: threading.Lock = None
