@@ -67,7 +67,7 @@ def on_mouse_click(x, y, button, pressed): # Example arguments: x=1962 y=1792 bu
     elif button == mouse.Button.right:
         is_right_mouse_down = False
 
-    if SETTINGS["HOLD_RIGHT"]: 
+    if SETTINGS["HOLD_RIGHT"]["value"]: 
         if is_left_mouse_down and is_right_mouse_down:
             if not moving_pattern:
                 threading.Thread(target=move_mouse_pattern).start()
