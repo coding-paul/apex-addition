@@ -27,16 +27,6 @@ class create_logger():
         self.ui_logging_active = True
 
     def __log(self, value: str, message_type: str, color: available_colors=None, newline=True):
-        # Remove newlines and the start and end to put them on later on after adding all other pre- and suffixes
-        newline_prefix = ""
-        newline_suffix = ""
-        while value.startswith("\n"):
-            newline_prefix += "\n"
-            value = value[1:]  # Remove the first leading newline character
-        while value.endswith("\n"):
-            newline_suffix += "\n"
-            value = value[:-1]  # Remove the first leading newline character
-
         # Gettings prefixes
         color_prefix = {
             "BLUE": self.OKBLUE,
@@ -50,6 +40,22 @@ class create_logger():
             "warn": "(W) ",
             "error": "(E) "
         }.get(message_type, "")
+
+        if (type(value) != str):
+            print(color_prefix, end="")
+            print(value, end="")
+            print(self.ENDC, end="\n" if newline else "")
+            return
+
+        # Remove newlines and the start and end to put them on later on after adding all other pre- and suffixes
+        newline_prefix = ""
+        newline_suffix = ""
+        while value.startswith("\n"):
+            newline_prefix += "\n"
+            value = value[1:]  # Remove the first leading newline character
+        while value.endswith("\n"):
+            newline_suffix += "\n"
+            value = value[:-1]  # Remove the first leading newline character
 
         # Actual print statement
         print(newline_prefix + color_prefix + value + self.ENDC + newline_suffix, end="\n" if newline else "") # This is without the message prefix and without the name
