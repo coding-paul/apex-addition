@@ -3,9 +3,9 @@ from tkinter import messagebox
 from tkinter import ttk
 import json
 import ast
+import mss
 import threading
 from ctypes import windll
-from pynput import keyboard
 
 from recoil_handler import main as start_recoil_handler
 import utils
@@ -23,7 +23,14 @@ class App:
         self.root.resizable(False, False)
 
         # Directly scales to the screens resolution
-        windll.shcore.SetProcessDpiAwareness(1)
+        windll.shcore.SetProcessDpiAwareness(2)
+
+        # Get monitor information
+        monitors = mss.mss().monitors
+        if self.SETTINGS["UI_MONITOR"]["value"] < len(monitors):
+            monitor = monitors[int(self.SETTINGS["UI_MONITOR"]["value"])]
+            x,y = (monitor["left"], monitor["top"])
+            self.root.geometry(f"+{x}+{y}")
 
         # Styling
         self.style = ttk.Style()
@@ -97,7 +104,7 @@ class App:
         with open(path, "r") as file:
             settings = json.load(file)
 
-        inputs = {}
+        inputs: dict[ttk.Entry] = {}
         for key, setting in settings.items():
             ttk.Label(canvas_frame, text=f"{key}:").pack(anchor="w", padx=10)
             if isinstance(setting["value"], dict):
