@@ -26,6 +26,13 @@ ACTIVE_COLORS = [
     (96, 84, 162),   # Sniper (an)
     (193, 2, 74),    # ROT (an)
     (163, 63, 67),   # ROT (an) Color Blind Mode Tritanopia
+    # ALTERNATIVE
+    (90, 110, 40),   # Energie (an) 
+    (125, 84, 45),   # Leichte (an)
+    (56, 107, 89),   # Schwere (an)
+    (107, 32, 7),    # Schrot (an)
+    (75, 64, 143),   # Sniper (an)
+    (178, 1, 55),    # ROT (an)
 ]
 
 # Debugging
