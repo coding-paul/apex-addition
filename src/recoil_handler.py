@@ -1,111 +1,160 @@
 import json
 import time
-import ctypes
 import threading
-from pynput import mouse, keyboard
+import ctypes
+from ctypes import wintypes
 
 import utils
 from tracker import get_current_weapon as tracker_get_current_weapon, main as tracker_thread, tracker_stop_event
 
+# Windows API constants and structures
+WH_MOUSE_LL = 14
+WM_LBUTTONDOWN = 0x0201
+WM_LBUTTONUP = 0x0202
+WM_RBUTTONDOWN = 0x0204
+WM_RBUTTONUP = 0x0205
+LPARAM = ctypes.c_longlong if ctypes.sizeof(ctypes.c_void_p) == 8 else ctypes.c_long
+mouse_hook = None
+
+# Define the MSLLHOOKSTRUCT structure
+class MSLLHOOKSTRUCT(ctypes.Structure):
+    _fields_ = [
+        ("pt", wintypes.POINT),   # The x and y coordinates of the cursor
+        ("mouseData", wintypes.DWORD),
+        ("flags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", ctypes.POINTER(wintypes.ULONG))
+    ]
+
+# Global variables
 SETTINGS = utils.get_settings()
 UI = None
-
-m: mouse.Controller = None
-is_left_mouse_down: bool = False
-is_right_mouse_down: bool = False
-moving_pattern: bool = False
+is_left_mouse_down = False
+is_right_mouse_down = False
 logger = utils.create_logger("main.py")
 patterns: dict[list] = None
 stop_event = threading.Event()
 
-def load_pattern() -> tuple[list, str]:
-    logger.info("\nLoading pattern...")
-    weapon_scan: str = tracker_get_current_weapon()  # Is None from beginning but is a valid name of a weapon in the recoil_patterns.json file once a weapon is detected
+# Callback function for the mouse hook
+def mouse_hook_proc(nCode, wParam, lParam) -> int:
+    global is_left_mouse_down, is_right_mouse_down
+    if nCode == 0:  # HC_ACTION
+        mouse_data = ctypes.cast(lParam, ctypes.POINTER(MSLLHOOKSTRUCT)).contents
+        if wParam == WM_LBUTTONDOWN:
+            is_left_mouse_down = True
+        elif wParam == WM_LBUTTONUP:
+            is_left_mouse_down = False
+        elif wParam == WM_RBUTTONDOWN:
+            is_right_mouse_down = True
+        elif wParam == WM_RBUTTONUP:
+            is_right_mouse_down = False
 
-    # No weapon detected yet
-    if(weapon_scan is None):
-        logger.warn("Not any weapon detected yet\n")
-        return (None, None)
-    # Valid weapon detected
-    for pattern_name in patterns:
-        if weapon_scan == pattern_name:
-            return (patterns[pattern_name], pattern_name)
-    # Weapon not found -> Should not happen
-    logger.error(f"\nPattern not found for '{weapon_scan}' this is a bug and SHOULD NOT happen\n")
-    return (None, None)
+        if wParam == WM_LBUTTONDOWN or wParam == WM_RBUTTONDOWN:
+            if SETTINGS["HOLD_RIGHT"]["value"]:
+                if is_left_mouse_down and is_right_mouse_down:
+                    threading.Thread(target=move_mouse_pattern).start()
+            elif is_left_mouse_down:
+                threading.Thread(target=move_mouse_pattern).start()
 
-def move_mouse_pattern():
-    global moving_pattern
+    return ctypes.windll.user32.CallNextHookEx(None, nCode, wParam, LPARAM(lParam))
+
+# Install the hook
+def install_mouse_hook() -> int:
+    global mouse_hook  # Keep a reference to prevent garbage collection
+    HOOKPROC = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_int, wintypes.WPARAM, LPARAM)
+    mouse_hook = HOOKPROC(mouse_hook_proc)  # Store the hook procedure globally
+    hook_handle = ctypes.windll.user32.SetWindowsHookExW(WH_MOUSE_LL, mouse_hook, None, 0)
+
+    if not hook_handle:
+        error_code = ctypes.GetLastError()
+        logger.error(f"Failed to install hook! Error code: {error_code}")
+        exit(1)
+
+    logger.info("Mouse hook installed.")
+    return hook_handle
+
+def optimized_message_loop():
+    WAIT_OBJECT_0 = 0
+    QS_ALLEVENTS = 0x04FF
+    msg = wintypes.MSG()
+    sleep_duration = 0.001  # Initial sleep duration
+
+    while not stop_event.is_set():
+        result = ctypes.windll.user32.MsgWaitForMultipleObjects(
+            0, None, False, ctypes.c_ulong(10), QS_ALLEVENTS
+        )
+        if result == WAIT_OBJECT_0:
+            while ctypes.windll.user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):
+                ctypes.windll.user32.TranslateMessage(ctypes.byref(msg))
+                ctypes.windll.user32.DispatchMessageW(ctypes.byref(msg))
+                sleep_duration = 0.001  # Reset sleep on activity
+        else:
+            time.sleep(sleep_duration)
+            sleep_duration = min(sleep_duration + 0.001, 0.01)  # Increment sleep
+
+def move_mouse_pattern() -> None:
     pattern, pattern_name = load_pattern()
-    moving_pattern = True
-    # Found a pattern
-    if type(pattern) is list:
-        logger.info(f"Moving mouse via the pattern: {pattern_name} with a lenght of: {len(pattern)}\n")
+
+    if isinstance(pattern, list):
+        logger.info(f"Moving mouse via the pattern: {pattern_name} with a length of: {len(pattern)}")
         for move in pattern:
             if SETTINGS["HOLD_RIGHT"]["value"]:
-                if not is_left_mouse_down or not is_right_mouse_down: # If the left or right mouse button is not pressed anymore, stop the pattern
-                    moving_pattern = False
+                if not is_left_mouse_down or not is_right_mouse_down:
                     return
             else:
-                if not is_left_mouse_down: # If the left mouse button is not pressed anymore, stop the pattern
-                    moving_pattern = False
+                if not is_left_mouse_down:
                     return
-            ctypes.windll.user32.mouse_event(0x0001, int(move[0] * (SETTINGS["SENSITIVITY"]["value"] / 5)), int(move[1] * (SETTINGS["SENSITIVITY"]["value"] / 5)), 0, 0)
+
+            sensitivity_factor = SETTINGS["SENSITIVITY"]["value"] / 5
+            ctypes.windll.user32.mouse_event(
+                0x0001,
+                int(move[0] * sensitivity_factor),
+                int(move[1] * sensitivity_factor),
+                0,
+                0
+            )
             time.sleep(move[2])
-    moving_pattern = False
 
-def on_mouse_click(x, y, button, pressed): # Example arguments: x=1962 y=1792 button=<Button.left:(4, 2, 0)> pressed=False / True when pressed and False when released
-    global is_left_mouse_down, is_right_mouse_down, moving_pattern
-    
-    if button == mouse.Button.left and pressed:
-        is_left_mouse_down = True
-    elif button == mouse.Button.left:
-        is_left_mouse_down = False
+def load_pattern() -> tuple[list, str]:
+    logger.info("\nLoading pattern...")
+    weapon_scan = tracker_get_current_weapon()
 
-    if button == mouse.Button.right and pressed:
-        is_right_mouse_down = True
-    elif button == mouse.Button.right:
-        is_right_mouse_down = False
+    if weapon_scan is None:
+        logger.warn("No weapon detected yet")
+        return None, None
 
-    if SETTINGS["HOLD_RIGHT"]["value"]: 
-        if is_left_mouse_down and is_right_mouse_down:
-            if not moving_pattern:
-                threading.Thread(target=move_mouse_pattern).start()
-    else:
-        if is_left_mouse_down:
-            if not moving_pattern:
-                threading.Thread(target=move_mouse_pattern).start()
+    for pattern_name in patterns:
+        if weapon_scan == pattern_name:
+            return patterns[pattern_name], pattern_name
 
-def on_keyboard_click(key):
-    if(key == keyboard.KeyCode.from_char(SETTINGS["QUIT_KEY"]["value"])):
-        return utils.quit_program(UI)
+    logger.error(f"Pattern not found for '{weapon_scan}'")
+    return None, None
 
-def main(ui):
-    global UI, m, patterns, SETTINGS
+def main(ui) -> None:
+    global UI, patterns, SETTINGS
     UI = ui
 
     SETTINGS = utils.get_settings()
     stop_event.clear()
-    logger.info("\n\nMain application running...", color="CYAN")
-    m = mouse.Controller()
+    logger.info("Main application running...")
 
     path = utils.get_absolute_path("recoil_patterns.json")
     with open(path, 'r') as file:
-        data: dict = json.load(file)
+        data = json.load(file)
         patterns = data["recoil_patterns"]
 
-    mouse_listener = mouse.Listener(on_click=on_mouse_click)
-    mouse_listener.start()
-    keyboard_listener = keyboard.Listener(on_press=on_keyboard_click)
-    keyboard_listener.start()
-    
-    # Start the tracker thread
+    hook_handle = install_mouse_hook()
+
     tracker_thread_instance = threading.Thread(target=tracker_thread, args=(UI,))
     tracker_thread_instance.start()
-    
-    stop_event.wait()
-    mouse_listener.stop()
-    keyboard_listener.stop()
+
+    try:
+        optimized_message_loop()
+    except Exception as e:
+        logger.error(f"Unhandled exception in message loop: {e}")
+    finally:
+        ctypes.windll.user32.UnhookWindowsHookEx(hook_handle)
+        logger.info("Recoil handler stopped.")
 
 if __name__ == '__main__':
-    main()
+    logger.error("\nRecoil_handler must be called from UI\n")

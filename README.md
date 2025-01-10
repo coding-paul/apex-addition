@@ -20,7 +20,6 @@ A guide on how to download and install **Git** can be found [here](https://learn
 ### Python3.11
 
 A guide on how to download and install **Python** can be found [here](https://www.simplilearn.com/tutorials/python-tutorial/python-installation-on-windows) <br/>
-Currently, the pynput module is broken on the python versions 3.12 and above. Therefore, is is needed to install python on version 3.11
 
 ### Visual Studio Code (VSCode)
 
