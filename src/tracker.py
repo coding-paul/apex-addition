@@ -48,6 +48,13 @@ current_weapon: str = None
 weapon1_text: str = None
 weapon2_text: str = None
 
+def set_pos_to_default():
+    global BBOX1, BBOX2, FIRST_WEAPON_PIXEL, SECOND_WEAPON_PIXEL
+    BBOX1 = (1550, 1030, 1675, 1060)
+    BBOX2 = (1715, 1030, 1815, 1060)
+    FIRST_WEAPON_PIXEL = (1678, 1040)
+    SECOND_WEAPON_PIXEL = (1820, 1040)
+
 def update_weapon(new_weapon: str, slot: int): # Only gets called when a new weapon is detected which is not None or an empty string
     global current_weapon
 
@@ -83,7 +90,8 @@ def get_current_weapon() -> str:
 def get_color_at_position(x: int, y: int) -> tuple[int, int, int]:
     with mss.mss() as sct:
         # Define a bounding box that captures only the single pixel at (x, y)
-        monitor = sct.monitors[int(SETTINGS["APEX_MONITOR"]["value"])]
+        monitor_nr = int(SETTINGS["APEX_MONITOR"]["value"])
+        monitor = sct.monitors[monitor_nr]
         bbox = (monitor["left"] + x, monitor["top"] + y, monitor["left"] + x + 1, monitor["top"] + y + 1)
         screenshot = sct.grab((bbox))
         color = screenshot.pixel(0, 0)  # Get the color of the single pixel
@@ -184,6 +192,7 @@ def main(ui):
 
     if USER_RESOLUTION != DEFAULT_RESOLUTION:
         global BBOX1, BBOX2, FIRST_WEAPON_PIXEL, SECOND_WEAPON_PIXEL
+        set_pos_to_default()
         logger.info("You are playing on an other resolution than the default 1920x1080\nThis Script will automaticly resize to your Resolution.\n")
         BBOX1 = utils.scale_coordinates(BBOX1, DEFAULT_RESOLUTION, USER_RESOLUTION)
         BBOX2 = utils.scale_coordinates(BBOX2, DEFAULT_RESOLUTION, USER_RESOLUTION)
