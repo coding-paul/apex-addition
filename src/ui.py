@@ -26,11 +26,7 @@ class App:
         windll.shcore.SetProcessDpiAwareness(2)
 
         # Get monitor information
-        monitors = mss.mss().monitors
-        if self.SETTINGS["UI_MONITOR"]["value"] < len(monitors):
-            monitor = monitors[int(self.SETTINGS["UI_MONITOR"]["value"])]
-            x,y = (monitor["left"], monitor["top"])
-            self.root.geometry(f"+{x}+{y}")
+        self.__move_window_to_screen_nr(self.root, self.SETTINGS["UI_MONITOR"]["value"])
 
         # Styling
         self.style = ttk.Style()
@@ -54,6 +50,16 @@ class App:
         self.settings_button = ttk.Button(self.main_frame, text="Change Settings", command=self.change_settings)
         self.settings_button.pack(fill="x", pady=5)
 
+    def __move_window_to_screen_nr(self, object: tk.Tk, monitor_nr: int):
+        monitor_nr = int(monitor_nr)
+        monitors = mss.mss().monitors
+        if monitor_nr < len(monitors):
+            monitor = monitors[monitor_nr]
+            x,y = (monitor["left"], monitor["top"])
+            object.geometry(f"+{x}+{y}")
+        else:
+            print(f"Too high monitor number")
+            self.stop_application()
 
     def on_close(self):
         self.stop_application(exit=True)
@@ -89,6 +95,7 @@ class App:
         settings_window.title("Change Settings")
         settings_window.geometry("400x300")
         settings_window.resizable(False, False)
+        self.__move_window_to_screen_nr(settings_window, self.SETTINGS["UI_MONITOR"]["value"])
 
         # Create a Canvas and a scrollbar
         canvas = tk.Canvas(settings_window)
