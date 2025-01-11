@@ -41,7 +41,7 @@ def hook_thread():
 
     try:
         msg = wintypes.MSG()
-        while not stop_event.is_set and ctypes.windll.user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
+        while not stop_event.is_set() and ctypes.windll.user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
             ctypes.windll.user32.TranslateMessage(ctypes.byref(msg))
             ctypes.windll.user32.DispatchMessageW(ctypes.byref(msg))
     finally:
