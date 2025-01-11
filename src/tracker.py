@@ -222,5 +222,4 @@ def main(ui):
     thread2.join()
 
 if __name__ == "__main__":
-    logger.error("\n\n!!!NOT RUNNING MAIN APPLICATION!!!\n")
-    main()
+    logger.error("\nTracker must be called from UI\n")
