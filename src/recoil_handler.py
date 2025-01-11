@@ -58,7 +58,8 @@ def install_mouse_hook() -> int:
     if not hook_handle:
         error_code = ctypes.GetLastError()
         logger.error(f"Failed to install hook! Error code: {error_code}")
-        exit(1)
+        utils.quit_program()
+        quit(1)
 
     logger.info("Mouse hook installed.")
     return hook_handle
