@@ -35,28 +35,18 @@ logger = utils.create_logger("main.py")
 patterns: dict[list] = None
 stop_event = threading.Event()
 
-# Callback function for the mouse hook
-def mouse_hook_proc(nCode, wParam, lParam) -> int:
-    global is_left_mouse_down, is_right_mouse_down
-    if nCode == 0:  # HC_ACTION
-        mouse_data = ctypes.cast(lParam, ctypes.POINTER(MSLLHOOKSTRUCT)).contents
-        if wParam == WM_LBUTTONDOWN:
-            is_left_mouse_down = True
-        elif wParam == WM_LBUTTONUP:
-            is_left_mouse_down = False
-        elif wParam == WM_RBUTTONDOWN:
-            is_right_mouse_down = True
-        elif wParam == WM_RBUTTONUP:
-            is_right_mouse_down = False
+def hook_thread():
+    hook_handle = install_mouse_hook()
+    logger.info("Mouse hook installed in a dedicated thread.")
 
-        if wParam == WM_LBUTTONDOWN or wParam == WM_RBUTTONDOWN:
-            if SETTINGS["HOLD_RIGHT"]["value"]:
-                if is_left_mouse_down and is_right_mouse_down:
-                    threading.Thread(target=move_mouse_pattern).start()
-            elif is_left_mouse_down:
-                threading.Thread(target=move_mouse_pattern).start()
-
-    return ctypes.windll.user32.CallNextHookEx(None, nCode, wParam, LPARAM(lParam))
+    try:
+        msg = wintypes.MSG()
+        while ctypes.windll.user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
+            ctypes.windll.user32.TranslateMessage(ctypes.byref(msg))
+            ctypes.windll.user32.DispatchMessageW(ctypes.byref(msg))
+    finally:
+        ctypes.windll.user32.UnhookWindowsHookEx(hook_handle)
+        logger.info("Mouse hook uninstalled.")
 
 # Install the hook
 def install_mouse_hook() -> int:
@@ -73,24 +63,29 @@ def install_mouse_hook() -> int:
     logger.info("Mouse hook installed.")
     return hook_handle
 
-def optimized_message_loop():
-    WAIT_OBJECT_0 = 0
-    QS_ALLEVENTS = 0x04FF
-    msg = wintypes.MSG()
-    sleep_duration = 0.001  # Initial sleep duration
+# Callback function for the mouse hook
+def mouse_hook_proc(nCode, wParam, lParam) -> int:
+    if nCode != 0: # No event
+        return ctypes.windll.user32.CallNextHookEx(None, nCode, wParam, LPARAM(lParam))
+    
+    global is_left_mouse_down, is_right_mouse_down
+    # mouse_data = ctypes.cast(lParam, ctypes.POINTER(MSLLHOOKSTRUCT)).contents
+    if wParam == WM_LBUTTONDOWN:
+        is_left_mouse_down = True
+    elif wParam == WM_LBUTTONUP:
+        is_left_mouse_down = False
+    elif wParam == WM_RBUTTONDOWN:
+        is_right_mouse_down = True
+    elif wParam == WM_RBUTTONUP:
+        is_right_mouse_down = False
 
-    while not stop_event.is_set():
-        result = ctypes.windll.user32.MsgWaitForMultipleObjects(
-            0, None, False, ctypes.c_ulong(10), QS_ALLEVENTS
-        )
-        if result == WAIT_OBJECT_0:
-            while ctypes.windll.user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):
-                ctypes.windll.user32.TranslateMessage(ctypes.byref(msg))
-                ctypes.windll.user32.DispatchMessageW(ctypes.byref(msg))
-                sleep_duration = 0.001  # Reset sleep on activity
-        else:
-            time.sleep(sleep_duration)
-            sleep_duration = min(sleep_duration + 0.001, 0.01)  # Increment sleep
+    if wParam == WM_LBUTTONDOWN or wParam == WM_RBUTTONDOWN:
+        if SETTINGS["HOLD_RIGHT"]["value"]:
+            if is_left_mouse_down and is_right_mouse_down:
+                threading.Thread(target=move_mouse_pattern).start()
+        elif is_left_mouse_down:
+            threading.Thread(target=move_mouse_pattern).start()
+    return ctypes.windll.user32.CallNextHookEx(None, nCode, wParam, LPARAM(lParam))
 
 def move_mouse_pattern() -> None:
     pattern, pattern_name = load_pattern()
@@ -143,18 +138,11 @@ def main(ui) -> None:
         data = json.load(file)
         patterns = data["recoil_patterns"]
 
-    hook_handle = install_mouse_hook()
+    hook_thread_instance = threading.Thread(target=hook_thread)
+    hook_thread_instance.start()
 
     tracker_thread_instance = threading.Thread(target=tracker_thread, args=(UI,))
     tracker_thread_instance.start()
-
-    try:
-        optimized_message_loop()
-    except Exception as e:
-        logger.error(f"Unhandled exception in message loop: {e}")
-    finally:
-        ctypes.windll.user32.UnhookWindowsHookEx(hook_handle)
-        logger.info("Recoil handler stopped.")
 
 if __name__ == '__main__':
     logger.error("\nRecoil_handler must be called from UI\n")
