@@ -81,7 +81,7 @@ def update_weapon(new_weapon: str, slot: int): # Only gets called when a new wea
             with weapon_lock:
                 current_weapon = weapon
             return
-    logger.warn(f"Tracker did not find valid weapon: {new_weapon} ?")
+    logger.warn(f"Tracker did not find valid weapon: '{new_weapon}'")
 
 def get_current_weapon() -> str:
     with weapon_lock:

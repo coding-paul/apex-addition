@@ -132,7 +132,7 @@ def main(ui) -> None:
 
     SETTINGS = utils.get_settings()
     stop_event.clear()
-    logger.info("Main application running...")
+    logger.info("\nRecoil_handler running...", color="CYAN")
 
     path = utils.get_absolute_path("recoil_patterns.json")
     with open(path, 'r') as file:

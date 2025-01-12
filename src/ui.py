@@ -75,11 +75,11 @@ class App:
 
     def stop_application(self, exit=False, from_utils=False):
         if not from_utils:
-            utils.quit_program(self, exit) # This will do some stuff and then recall this function
+            utils.quit_program(self, exit) # This will set all stop_events and then recall this function
             return
         if self.process is not None:
             self.process = None
-            print("\nApplication stopped from ui\n")
+            print("\nStopping application...\n")
             if not exit:
                 messagebox.showinfo("Info", "Application stopped")
         else:
