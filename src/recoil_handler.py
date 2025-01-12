@@ -5,6 +5,7 @@ import ctypes
 from ctypes import wintypes
 
 import utils
+from mouse_mover import move_mouse
 from tracker import get_current_weapon as tracker_get_current_weapon, main as tracker_thread, tracker_stop_event
 
 # Windows API constants and structures
@@ -97,26 +98,23 @@ def mouse_hook_proc(nCode, wParam, lParam) -> int:
 
 def move_mouse_pattern() -> None:
     pattern, pattern_name = load_pattern()
+    if not isinstance(pattern, list):
+        return
+    
+    logger.info(f"Moving mouse via the pattern: {pattern_name}")
+    for move in pattern:
+        if SETTINGS["HOLD_RIGHT"]["value"]:
+            if not is_left_mouse_down or not is_right_mouse_down:
+                return
+        else:
+            if not is_left_mouse_down:
+                return
 
-    if isinstance(pattern, list):
-        logger.info(f"Moving mouse via the pattern: {pattern_name} with a length of: {len(pattern)}")
-        for move in pattern:
-            if SETTINGS["HOLD_RIGHT"]["value"]:
-                if not is_left_mouse_down or not is_right_mouse_down:
-                    return
-            else:
-                if not is_left_mouse_down:
-                    return
-
-            sensitivity_factor = SETTINGS["SENSITIVITY"]["value"] / 5
-            ctypes.windll.user32.mouse_event(
-                0x0001,
-                int(move[0] * sensitivity_factor),
-                int(move[1] * sensitivity_factor),
-                0,
-                0
-            )
-            time.sleep(move[2])
+        sensitivity_factor = SETTINGS["SENSITIVITY"]["value"] / 5
+        move_x = int(move[0] * sensitivity_factor)
+        move_y = int(move[1] * sensitivity_factor)
+        move_mouse(move_x, move_y)
+        time.sleep(move[2])
 
 def load_pattern() -> tuple[list, str]:
     logger.info("\nLoading pattern...")
