@@ -133,11 +133,12 @@ def load_pattern() -> tuple[list, str]:
 
 def main(ui) -> None:
     global UI, patterns, SETTINGS
+    logger.init_ui_logging(ui)
     UI = ui
 
     SETTINGS = utils.get_settings()
     stop_event.clear()
-    logger.info("\nRecoil_handler running...", color="CYAN")
+    logger.info("\nRecoil_handler running...", color="GREEN")
 
     path = utils.get_absolute_path("recoil_patterns.json")
     with open(path, 'r') as file:

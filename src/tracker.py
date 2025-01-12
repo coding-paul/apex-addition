@@ -174,11 +174,12 @@ def color_checking():
 
 def main(ui):
     global UI, weapon_lock, available_weapons, SETTINGS, USER_RESOLUTION
+    logger.init_ui_logging(ui)
     UI = ui
     SETTINGS = utils.get_settings()
     tracker_stop_event.clear()
 
-    logger.info("Tracker running...\n", color="CYAN")
+    logger.info("Tracker running...\n", color="GREEN")
 
     if SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["AUTO-DETECT"]:
         with mss.mss() as sct:

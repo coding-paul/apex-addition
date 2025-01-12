@@ -22,6 +22,9 @@ class App:
         self.root.geometry(self.SETTINGS["WINDOW_SIZE"]["value"])
         self.root.resizable(False, False)
 
+        self.log_frame: ttk.Frame = None
+        self.logging_window: tk.Toplevel = None
+
         # Directly scales to the screens resolution
         windll.shcore.SetProcessDpiAwareness(2)
 
@@ -50,12 +53,16 @@ class App:
         self.settings_button = ttk.Button(self.main_frame, text="Change Settings", command=self.change_settings)
         self.settings_button.pack(fill="x", pady=5)
 
-    def __move_window_to_screen_nr(self, object: tk.Tk, monitor_nr: int):
+    def __move_window_to_screen_nr(self, object: tk.Tk, monitor_nr: int, extra_px: tuple[int,int]=None):
         monitor_nr = int(monitor_nr)
         monitors = mss.mss().monitors
         if monitor_nr < len(monitors):
             monitor = monitors[monitor_nr]
             x,y = (monitor["left"], monitor["top"])
+            if extra_px:
+                extra_x, extra_y = extra_px
+                x += extra_x
+                y += extra_y
             object.geometry(f"+{x}+{y}")
         else:
             print(f"Too high monitor number")
@@ -67,10 +74,13 @@ class App:
 
     def start_application(self):
         if self.process is None:
+            self.setup_logging_ui()
             self.process = threading.Thread(target=start_recoil_handler, args=(self,))
             self.process.start()
             messagebox.showinfo("Info", "Application started")
         else:
+            if not self.logging_window.winfo_exists():
+                self.setup_logging_ui()
             messagebox.showwarning("Warning", "Application is already running")
 
     def stop_application(self, exit=False, from_utils=False):
@@ -79,12 +89,52 @@ class App:
             return
         if self.process is not None:
             self.process = None
+            self.logging_window.destroy()
             print("\nStopping application...\n")
             if not exit:
                 messagebox.showinfo("Info", "Application stopped")
         else:
             if not exit:
                 messagebox.showwarning("Warning", "Application is not running")
+
+    def setup_logging_ui(self):
+        logging_window = tk.Toplevel(self.root)
+        logging_window.title("LOG")
+        logging_window.geometry("300x500")
+        logging_window.resizable(False, False)
+
+        window_size: str = self.SETTINGS["WINDOW_SIZE"]["value"]
+        x = int(window_size.split("x")[0])
+        self.__move_window_to_screen_nr(logging_window, self.SETTINGS["UI_MONITOR"]["value"], (int(x), 0))
+
+        # Create a Canvas and a scrollbar
+        canvas = tk.Canvas(logging_window, width=280)  # Set width to match wraplength
+        scrollbar = ttk.Scrollbar(logging_window, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Pack the canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Create a frame inside the canvas to hold the widgets
+        canvas_frame = ttk.Frame(canvas)
+        canvas.create_window((0, 0), window=canvas_frame, anchor="nw")
+
+        # Configure the canvas scroll region after adding widgets
+        canvas_frame.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+        # Bind scrolling to the mouse wheel
+        def _on_mouse_wheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
+
+        self.logging_window = logging_window
+        self.log_frame = canvas_frame
+    
+    def get_log_frame(self):
+        return self.log_frame
 
     def change_settings(self):
         if self.process is not None:

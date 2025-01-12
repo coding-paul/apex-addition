@@ -1,14 +1,20 @@
 import os
+import re
 import json
 import ctypes
+import tkinter as tk
+from tkinter import ttk
 from typing import Literal
 
 available_colors = Literal["BLUE", "CYAN", "GREEN", "YELLOW", "RED"]
 class create_logger():
-    def __init__(self, name: str):
+    def __init__(self, name: str, UI=None):
         self.name = name
         self.ui_logging_active = False
         self.UI = None
+        
+        if UI:
+            self.init_ui_logging(UI)
 
         self.OKBLUE = '\033[94m'
         self.OKCYAN = '\033[96m'
@@ -20,12 +26,67 @@ class create_logger():
         self.BOLD = '\033[1m'
         self.UNDERLINE = '\033[4m'
 
+        self.ANSI_STYLES = {
+        '\033[94m': {'foreground': 'blue'},      # OKBLUE
+        '\033[96m': {'foreground': 'cyan'},     # OKCYAN
+        '\033[92m': {'foreground': 'green'},    # OKGREEN
+        '\033[93m': {'foreground': 'orange'},   # WARNING
+        '\033[91m': {'foreground': 'red'},      # FAIL
+        '\033[95m': {'foreground': 'purple'},   # HEADER
+        '\033[0m': {'foreground': 'black'},     # ENDC (reset)
+        '\033[1m': {'font': ('Helvetica', 12, 'bold')},  # BOLD
+        '\033[4m': {'font': ('Helvetica', 12, 'underline')}  # UNDERLINE
+    }
+
     def init_ui_logging(self, UI):
-        if not isinstance(UI):
+        if getattr(UI, "get_log_frame", None) == None:
             self.error(f"Error when initializing ui for logging, {UI} is not a valid ui class")
             return
         self.UI = UI
         self.ui_logging_active = True
+
+    def __parse_ansi_message(self, message: str):
+        """
+        Parse ANSI escape codes and return a list of text segments with their styles.
+        """
+        ansi_pattern = re.compile(r'(\033\[\d+m)')  # Match ANSI escape sequences
+        parts = ansi_pattern.split(message)  # Split message into text and ANSI codes
+        segments = []
+
+        current_style = {}
+        for part in parts:
+            if part in self.ANSI_STYLES:
+                # Update current style based on ANSI code
+                current_style.update(self.ANSI_STYLES[part])
+            elif part.strip():  # Add text segments with the current style
+                segments.append((part, current_style.copy()))
+
+        return segments
+
+    def __log_to_ui(self, message: str):
+        ui_logger: ttk.Frame = self.UI.get_log_frame()
+        canvas: tk.Canvas = ui_logger.master  # The canvas containing the ui_logger
+
+        # Check if the user is at the bottom
+        _, end_fraction = canvas.yview()
+        at_bottom = end_fraction >= 1.0  # Check if the scrollbar is at the bottom
+
+        # Parse the ANSI message into styled segments
+        segments = self.__parse_ansi_message(message)
+
+        # Add each segment as a separate label with its style
+        for text, style in segments:
+            ttk.Label(ui_logger, text=text, wraplength=280, **style).pack(anchor="w", padx=10, pady=2)
+
+        ui_logger.update_idletasks()
+
+        # Update the scroll region to include the new content
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+        # Scroll down automatically only if the user was already at the bottom
+        if at_bottom:
+            canvas.yview_moveto(1.0)  # Move the view to the bottom
+
 
     def __log(self, value: str, message_type: str, color: available_colors=None, newline=True):
         # Gettings prefixes
@@ -58,12 +119,19 @@ class create_logger():
             newline_suffix += "\n"
             value = value[:-1]  # Remove the first leading newline character
 
-        # Actual print statement
-        print(newline_prefix + color_prefix + value + self.ENDC + newline_suffix, end="\n" if newline else "") # This is without the message prefix and without the name
+        print_val: str = newline_prefix + color_prefix + value + self.ENDC + newline_suffix
 
-        # If there is a UI, also log it to it
-        if self.ui_logging_active:
-            ...
+        # Actual print statement
+        print(print_val, end="\n" if newline else "")
+
+        try:
+            self.__log_to_ui(print_val)
+        except tk.TclError:
+            self.ui_logging_active = False
+            return
+        except RuntimeError:
+            self.ui_logging_active = False
+            os._exit(1)
 
     def info(self, content, color: available_colors=None, newline=True):
         self.__log(content, "info", color=color, newline=newline)
