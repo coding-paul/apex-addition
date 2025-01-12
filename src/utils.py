@@ -1,5 +1,6 @@
 import os
 import json
+import ctypes
 from typing import Literal
 
 available_colors = Literal["BLUE", "CYAN", "GREEN", "YELLOW", "RED"]
@@ -121,8 +122,9 @@ def get_settings() -> dict[dict]:
         return json.load(file, object_hook=__custom_decoder)
 
 def quit_program(UI, exit=False):
-    from recoil_handler import stop_event
+    from recoil_handler import stop_event, get_hook_thread_id
     from tracker import tracker_stop_event
     stop_event.set()
     tracker_stop_event.set()
+    ctypes.windll.user32.PostThreadMessageW(get_hook_thread_id(), 0x0400, 0, 0)  # This will make the mouse hook exit
     UI.stop_application(from_utils=True, exit=exit)

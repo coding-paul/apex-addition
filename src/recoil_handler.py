@@ -15,8 +15,7 @@ WM_RBUTTONDOWN = 0x0204
 WM_RBUTTONUP = 0x0205
 LPARAM = ctypes.c_longlong if ctypes.sizeof(ctypes.c_void_p) == 8 else ctypes.c_long
 mouse_hook = None
-
-# Define the MSLLHOOKSTRUCT structure
+hook_thread_id = None
 class MSLLHOOKSTRUCT(ctypes.Structure):
     _fields_ = [
         ("pt", wintypes.POINT),   # The x and y coordinates of the cursor
@@ -34,8 +33,19 @@ is_right_mouse_down = False
 logger = utils.create_logger("main.py")
 patterns: dict[list] = None
 stop_event = threading.Event()
+lock = threading.Lock()
+
+def get_hook_thread_id():
+    with lock:
+        return hook_thread_id
+    
+def set_hook_thread_id(val):
+    global hook_thread_id
+    with lock:
+        hook_thread_id = val
 
 def hook_thread():
+    set_hook_thread_id(ctypes.windll.kernel32.GetCurrentThreadId())
     hook_handle = install_mouse_hook()
     logger.info("Mouse hook installed in a dedicated thread.")
 
