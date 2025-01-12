@@ -47,7 +47,6 @@ def set_hook_thread_id(val):
 def hook_thread():
     set_hook_thread_id(ctypes.windll.kernel32.GetCurrentThreadId())
     hook_handle = install_mouse_hook()
-    logger.info("Mouse hook installed in a dedicated thread.")
 
     try:
         msg = wintypes.MSG()
@@ -56,7 +55,6 @@ def hook_thread():
             ctypes.windll.user32.DispatchMessageW(ctypes.byref(msg))
     finally:
         ctypes.windll.user32.UnhookWindowsHookEx(hook_handle)
-        logger.info("Mouse hook uninstalled.")
 
 # Install the hook
 def install_mouse_hook() -> int:
@@ -71,7 +69,6 @@ def install_mouse_hook() -> int:
         utils.quit_program()
         quit(1)
 
-    logger.info("Mouse hook installed.")
     return hook_handle
 
 # Callback function for the mouse hook
