@@ -19,7 +19,19 @@
     "value": 0.5,
     "description": "Time in seconds between checks of the held weapon. This is to save recources | Default: 0.5"
   },
-  "WINDOW_SIZE": {
+  "MAIN_UI_SIZE": {
+    "value": "400x300",
+    "description": "Size of the main ui in Pixel | Default: '400x300'"
+  },
+  "SETTINGS_UI_SIZE": {
+    "value": "400x300",
+    "description": "Size of the window in Pixel | Default: '400x300'"
+  },
+  "LOGGING_UI_SIZE": {
+    "value": "300x500",
+    "description": "Size of the window in Pixel | Default: '300x500'"
+  },
+  "WEAPON_UI_SIZE": {
     "value": "400x300",
     "description": "Size of the window in Pixel | Default: '400x300'"
   },

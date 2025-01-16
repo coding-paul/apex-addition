@@ -19,7 +19,7 @@ class App:
 
         self.root = root
         self.root.title("Apex Addition UI")
-        self.root.geometry(self.SETTINGS["WINDOW_SIZE"]["value"])
+        self.root.geometry(self.SETTINGS["MAIN_UI_SIZE"]["value"])
         self.root.resizable(False, False)
 
         self.log_frame: ttk.Frame = None
@@ -103,12 +103,12 @@ class App:
     def setup_logging_ui(self):
         logging_window = tk.Toplevel(self.root)
         logging_window.title("LOG")
-        logging_window.geometry("300x500")
+        logging_window.geometry(self.SETTINGS["LOGGING_UI_SIZE"]["value"])
         logging_window.resizable(False, False)
 
-        window_size: str = self.SETTINGS["WINDOW_SIZE"]["value"]
-        x = int(window_size.split("x")[0])
-        self.__move_window_to_screen_nr(logging_window, self.SETTINGS["UI_MONITOR"]["value"], (int(x), 0))
+        window_size: str = self.SETTINGS["MAIN_UI_SIZE"]["value"]
+        horizontal_size = int(window_size.split("x")[0])
+        self.__move_window_to_screen_nr(logging_window, self.SETTINGS["UI_MONITOR"]["value"], (horizontal_size+5, 0))
 
         # Create a Canvas and a scrollbar
         canvas = tk.Canvas(logging_window, width=280)  # Set width to match wraplength
@@ -146,9 +146,12 @@ class App:
 
         settings_window = tk.Toplevel(self.root)
         settings_window.title("Change Settings")
-        settings_window.geometry("400x300")
+        settings_window.geometry(self.SETTINGS["SETTINGS_UI_SIZE"]["value"])
         settings_window.resizable(False, False)
-        self.__move_window_to_screen_nr(settings_window, self.SETTINGS["UI_MONITOR"]["value"])
+
+        window_size: str = self.SETTINGS["MAIN_UI_SIZE"]["value"]
+        vertical_size = int(window_size.split("x")[1])
+        self.__move_window_to_screen_nr(settings_window, self.SETTINGS["UI_MONITOR"]["value"], (0, vertical_size+50))
 
         # Create a Canvas and a scrollbar
         canvas = tk.Canvas(settings_window)
