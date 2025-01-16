@@ -53,6 +53,9 @@ class App:
         self.settings_button = ttk.Button(self.main_frame, text="Change Settings", command=self.change_settings)
         self.settings_button.pack(fill="x", pady=5)
 
+        self.stop_button = ttk.Button(self.main_frame, text="Exit", command=self.on_close)
+        self.stop_button.pack(fill="x", pady=5)
+
     def __move_window_to_screen_nr(self, object: tk.Tk, monitor_nr: int, extra_px: tuple[int,int]=None):
         monitor_nr = int(monitor_nr)
         monitors = mss.mss().monitors
