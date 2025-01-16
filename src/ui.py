@@ -129,7 +129,8 @@ class App:
 
         # Bind scrolling to the mouse wheel
         def _on_mouse_wheel(event):
-            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            if canvas.winfo_exists:
+                canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
         canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
@@ -228,7 +229,8 @@ class App:
 
         # Bind the mouse scroll wheel to scroll the canvas
         def on_mouse_wheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            if canvas.winfo_exists:
+                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
         canvas.bind_all("<MouseWheel>", on_mouse_wheel)
 
