@@ -24,6 +24,8 @@ class App:
 
         self.log_frame: ttk.Frame = None
         self.logging_window: tk.Toplevel = None
+        self.weapon1_label: ttk.Label = None
+        self.weapon2_label: ttk.Label = None
 
         # Directly scales to the screens resolution
         windll.shcore.SetProcessDpiAwareness(2)
@@ -78,6 +80,7 @@ class App:
     def start_application(self):
         if self.process is None:
             self.setup_logging_ui()
+            self.setup_weapon_ui()
             self.process = threading.Thread(target=start_recoil_handler, args=(self,))
             self.process.start()
             messagebox.showinfo("Info", "Application started")
@@ -93,6 +96,7 @@ class App:
         if self.process is not None:
             self.process = None
             self.logging_window.destroy()
+            self.weapon_window.destroy()
             print("\nStopping application...\n")
             if not exit:
                 messagebox.showinfo("Info", "Application stopped")
@@ -106,9 +110,12 @@ class App:
         logging_window.geometry(self.SETTINGS["LOGGING_UI_SIZE"]["value"])
         logging_window.resizable(False, False)
 
-        window_size: str = self.SETTINGS["MAIN_UI_SIZE"]["value"]
-        horizontal_size = int(window_size.split("x")[0])
-        self.__move_window_to_screen_nr(logging_window, self.SETTINGS["UI_MONITOR"]["value"], (horizontal_size+5, 0))
+        main_ui_size: str = self.SETTINGS["MAIN_UI_SIZE"]["value"]
+        main_ui_horizontal_size = int(main_ui_size.split("x")[0])
+        weapon_ui_size: str = self.SETTINGS["WEAPON_UI_SIZE"]["value"]
+        weapon_ui_horizontal_size = int(weapon_ui_size.split("x")[0])
+        horizontal_size = main_ui_horizontal_size + weapon_ui_horizontal_size
+        self.__move_window_to_screen_nr(logging_window, self.SETTINGS["UI_MONITOR"]["value"], (horizontal_size+10, 0))
 
         # Create a Canvas and a scrollbar
         canvas = tk.Canvas(logging_window, width=280)  # Set width to match wraplength
@@ -139,6 +146,37 @@ class App:
     
     def get_log_frame(self):
         return self.log_frame
+    
+    def setup_weapon_ui(self):
+        weapon_window = tk.Toplevel(self.root)
+        weapon_window.title("Weapons:")
+        weapon_window.geometry(self.SETTINGS["WEAPON_UI_SIZE"]["value"])
+        weapon_window.resizable(False, False)
+
+        main_ui_size: str = self.SETTINGS["MAIN_UI_SIZE"]["value"]
+        main_ui_horizontal_size = int(main_ui_size.split("x")[0])
+        self.__move_window_to_screen_nr(weapon_window, self.SETTINGS["UI_MONITOR"]["value"], (main_ui_horizontal_size+5, 0))
+
+        ttk.Label(weapon_window, text="Your weapons", wraplength=350).pack(pady=(10, 20))
+        self.weapon1_label = ttk.Label(weapon_window, text="Weapon 1:\nNone", wraplength=350, anchor="center")
+        self.weapon1_label.pack(pady=(10, 20))
+        self.weapon2_label = ttk.Label(weapon_window, text="Weapon 2:\nNone", wraplength=350, anchor="center")
+        self.weapon2_label.pack(pady=(10, 20))
+        self.weapon_window = weapon_window
+
+    def set_weapon(self, weapon_name: str, number: int, selected_weapon_color="green"):
+        # Check if both Labels have been initialized
+        if not (isinstance(self.weapon1_label, ttk.Label) and isinstance(self.weapon2_label, ttk.Label)):
+            return
+        # Check if both Labels are existing (Not window closed)
+        if not (self.weapon1_label.winfo_exists() and self.weapon2_label.winfo_exists()):
+            return
+        if number == 1:
+            self.weapon1_label.config(text="Weapon 1:\n" + weapon_name, foreground=selected_weapon_color)
+            self.weapon2_label.config(foreground="black")
+        elif number == 2:
+            self.weapon2_label.config(text="Weapon 1:\n" + weapon_name, foreground=selected_weapon_color)
+            self.weapon1_label.config(foreground="black")
 
     def change_settings(self):
         if self.process is not None:

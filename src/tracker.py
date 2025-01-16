@@ -80,8 +80,11 @@ def update_weapon(new_weapon: str, slot: int): # Only gets called when a new wea
             logger.info(f"Found valid Weapon({slot}): {weapon}", color="GREEN")
             with weapon_lock:
                 current_weapon = weapon
-            return
+            UI.set_weapon(weapon, slot)
+            return 
     logger.warn(f"Tracker did not find valid weapon: '{new_weapon}'")
+    UI.set_weapon(new_weapon, slot, "orange")
+    return
 
 def get_current_weapon() -> str:
     with weapon_lock:
