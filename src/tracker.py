@@ -84,9 +84,11 @@ def update_weapon(new_weapon: str, slot: int): # Only gets called when a new wea
             return 
     logger.warn(f"Tracker did not find valid weapon: '{new_weapon}'")
     UI.set_weapon(new_weapon, slot, "orange")
+    with weapon_lock:
+        current_weapon = new_weapon
     return
 
-def get_current_weapon() -> str:
+def get_current_weapon() -> str | None:
     with weapon_lock:
         return current_weapon
 
@@ -151,7 +153,7 @@ def color_checking():
             # Get the color at the specified position
             
             # Check if the color matches the target color
-            if color == target_color and weapon1_text != "" and weapon1_text is not None:
+            if color == target_color and weapon1_text != "" and weapon1_text is not None and len(weapon1_text) > 3:
                 update_weapon(weapon1_text, 1)
                 break
         else:
@@ -163,7 +165,7 @@ def color_checking():
                 # Get the color at the specified position
                 
                 # Check if the color matches the target color
-                if color == target_color and weapon2_text != "" and weapon2_text is not None:
+                if color == target_color and weapon2_text != "" and weapon2_text is not None and len(weapon1_text) > 3:
                     update_weapon(weapon2_text, 2)
                     break
             else:

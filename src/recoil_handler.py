@@ -118,17 +118,17 @@ def move_mouse_pattern() -> None:
 
 def load_pattern() -> tuple[list, str]:
     logger.info("\nLoading pattern...")
-    weapon_scan = tracker_get_current_weapon()
+    weapon_scan = tracker_get_current_weapon() # Gets the weapons name, is a weapon name with at least 3 chars or None
 
     if weapon_scan is None:
-        logger.warn("No weapon detected yet")
+        logger.warn("No weapon detected")
         return None, None
 
     for pattern_name in patterns:
         if weapon_scan == pattern_name:
             return patterns[pattern_name], pattern_name
 
-    logger.error(f"Pattern not found for '{weapon_scan}'")
+    logger.warn(f"Pattern not found for '{weapon_scan}'")
     return None, None
 
 def main(ui) -> None:
