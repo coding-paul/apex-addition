@@ -1,8 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
-import json
-import ast
 import mss
 import threading
 from ctypes import windll
