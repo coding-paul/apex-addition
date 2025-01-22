@@ -5,6 +5,7 @@ import ctypes
 import tkinter as tk
 from tkinter import ttk
 from typing import Literal
+from ast import literal_eval as str_dict
 
 available_colors = Literal["BLUE", "CYAN", "GREEN", "YELLOW", "RED"]
 class create_logger():
@@ -145,6 +146,8 @@ class create_logger():
     def newline(self):
         print()
 
+logger = create_logger("utils")
+
 def get_absolute_path(rel_path: str, file=__file__) -> str:
   script_dir = os.path.dirname(file) #<-- absolute dir the script is in
   abs_file_path = os.path.join(script_dir, rel_path)
@@ -170,24 +173,56 @@ def scale_coordinates(original_coords: tuple, from_resolution: tuple[int, int], 
         new_y2 = int(y2 * height_scaling_factor)
         return (new_x1, new_y1, new_x2, new_y2)
     
+def configure_types(obj: dict[dict]) -> dict[dict] | tuple[None, str, str]:
+    """
+    A function to turn values in specified types
+
+    Params:
+        obj:
+            Must be a python dict that consists of dicts that hold two attributes, value and type.
+    
+    The function will, on success, return the dict where each subdict value is the specified type.
+
+    On fail, the function will return a tuple containing (None, the key where the error occured, the target type, the exeption)
+    """
+    for key, setting in obj.items():
+        if isinstance(setting, dict) and 'value' in setting and 'type' in setting:
+            try:
+                match(setting["type"]):
+                    case "str":
+                        setting["value"] = str(setting["value"])  
+                    case "int":
+                        setting["value"] = int(setting["value"])
+                    case "float":
+                        setting["value"] = float(setting["value"])  
+                    case "bool":
+                        setting["value"] = bool(setting["value"])
+                    case "dict":
+                        setting["value"] = str_dict(str(setting["value"]))
+            except Exception as e:
+                    return (None, key, setting["type"], e)
+
+        elif isinstance(setting, dict):
+            obj[key] = configure_types(setting)
+    return obj
+
 def get_settings() -> dict[dict]:
-    def __custom_decoder(obj: dict):
-        for key, value in obj.items():
-            # Check if 'value' is present in the current dictionary
-            if isinstance(value, dict) and 'value' in value:
-                # Convert integers to booleans only if description hints a boolean
-                if "True" in value['description'] or "False" in value['description']:
-                    if value['value'] == 1:
-                        value['value'] = True
-                    elif value['value'] == 0:
-                        value['value'] = False
-            # Recursively process nested dictionaries
-            elif isinstance(value, dict):
-                obj[key] = __custom_decoder(value)
-        return obj
     path = get_absolute_path("../settings/settings.json")
     with open(path, "r") as file:
-        return json.load(file, object_hook=__custom_decoder)
+        settings = json.load(file)
+
+    result = configure_types(settings)
+
+    if isinstance(result, tuple) and result[0] == None: # Error parsing settings types
+            logger.error(f"\nError while getting settings.\nKey: '{result[1]}'\nTarget Type: '{result[2]}'\nExeption: '{result[3]}'\n")
+            quit_program()
+
+    return result
+
+def write_settings(settings: dict[dict]) -> None:
+    path = get_absolute_path("../settings/settings.json")
+    with open(path, "w") as file:
+            json.dump(settings, file, indent=2)
 
 def quit_program(UI, exit=False):
     from recoil_handler import stop_event, get_hook_thread_id

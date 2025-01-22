@@ -202,12 +202,8 @@ class App:
 
         ttk.Label(canvas_frame, text="Here you can change your settings. Be careful to enter valid values. Press save settings at the bottom to save it", wraplength=350).pack(pady=(10, 20))
 
-        path = utils.get_absolute_path("../settings/settings.json")
-        with open(path, "r") as file:
-            settings = json.load(file)
-
         inputs: dict[ttk.Entry] = {}
-        for key, setting in settings.items():
+        for key, setting in self.SETTINGS.items():
             ttk.Label(canvas_frame, text=f"{key}:").pack(anchor="w", padx=10)
             if isinstance(setting["value"], dict):
                 # Warning label for dictionary settings
@@ -221,33 +217,22 @@ class App:
             if self.process is not None:
                 messagebox.showwarning("Warning", "Can't save settings when the program is running")
                 return
+            
+            result = self.SETTINGS
+            input_field: ttk.Entry
             for key, input_field in inputs.items():
-                type_of_setting = type(settings[key]["value"])
                 new_value = input_field.get()
-                try:
-                    if type_of_setting == str:
-                        new_value = str(new_value)
-                    elif type_of_setting in [float, int]:
-                        new_value = float(new_value)
-                    elif type_of_setting == dict:
-                        new_value = ast.literal_eval(new_value)
-                    elif type_of_setting == bool:
-                        if not (new_value == 'True' or new_value == 'False'):
-                            messagebox.showerror("Warning", f"{key} can only be 'True' or 'False'")
-                            return
-                        new_value = new_value == "True"
-                    else:
-                        messagebox.showerror(
-                            "Error", f"Invalid data type for: '{new_value}', expected {type_of_setting}")
-                        return
-                except (ValueError, SyntaxError):
-                    messagebox.showwarning("Warning", f"Invalid value for: '{key}'")
-                    return
-                settings[key]["value"] = new_value
+                result[key]["value"] = new_value
+            
+            result = utils.configure_types(result)
 
-            with open(path, "w") as file:
-                json.dump(settings, file, indent=2)
+            if isinstance(result, tuple) and result[0] == None: # This means it failed
+                messagebox.showerror("Error", f"Invalid data type for: '{result[1]}', expected {result[2]}")
+                return
+
+            utils.write_settings(self.SETTINGS)
             self.SETTINGS = utils.get_settings()
+            
             settings_window.destroy()
             messagebox.showinfo("Info", "Settings saved")
 
