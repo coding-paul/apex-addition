@@ -186,13 +186,13 @@ def main(ui):
 
     logger.info("Tracker running...\n", color="GREEN")
 
-    if SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["AUTO-DETECT"]:
+    if SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["AUTO-DETECT"]["value"]:
         with mss.mss() as sct:
             monitor = sct.monitors[int(SETTINGS["APEX_MONITOR"]["value"])]
             screenshot = sct.grab(monitor)
             USER_RESOLUTION = (screenshot.width, screenshot.height)
     else:
-        USER_RESOLUTION = (SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["WIDTH"], SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["HEIGHT"])
+        USER_RESOLUTION = (SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["WIDTH"]["value"], SETTINGS["AUTO-DETECT-RESOLUTION"]["value"]["HEIGHT"]["value"])
 
     logger.info(f"Resolution: {USER_RESOLUTION}")
 
