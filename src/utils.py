@@ -186,7 +186,9 @@ def configure_types(obj: dict[str, dict]) -> dict[str, dict] | tuple[None, str, 
     On fail, the function will return a tuple containing (None, the key where the error occured, the target type, the exeption)
     """
     for key, setting in obj.items():
-        if isinstance(setting, dict) and 'value' in setting and 'type' in setting:
+        if isinstance(setting, dict) and 'value' in setting and 'type' in setting and setting["type"] == "dict": # Nested dict
+            obj[key] = configure_types(setting)
+        elif isinstance(setting, dict) and 'value' in setting and 'type' in setting: # Non nested dict but valid setting
             try:
                 match(setting["type"]):
                     case "str":
@@ -201,9 +203,6 @@ def configure_types(obj: dict[str, dict]) -> dict[str, dict] | tuple[None, str, 
                         setting["value"] = str_dict(str(setting["value"]))
             except Exception as e:
                     return (None, key, setting["type"], e)
-
-        elif isinstance(setting, dict):
-            obj[key] = configure_types(setting)
     return obj
 
 def get_settings() -> dict[str, dict]:
