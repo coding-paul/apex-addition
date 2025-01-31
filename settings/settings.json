@@ -61,11 +61,11 @@
         "type": "bool"
       },
       "WIDTH": {
-        "value": null,
+        "value": "0",
         "type": "int"
       },
       "HEIGHT": {
-        "value": null,
+        "value": "0",
         "type": "int"
       }
     },

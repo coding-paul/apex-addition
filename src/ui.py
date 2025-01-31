@@ -186,74 +186,109 @@ class App:
         settings_window.geometry(self.SETTINGS["SETTINGS_UI_SIZE"]["value"])
         settings_window.resizable(False, False)
 
-        window_size: str = self.SETTINGS["MAIN_UI_SIZE"]["value"]
-        vertical_size = int(window_size.split("x")[1])
-        self.__move_window_to_screen_nr(settings_window, self.SETTINGS["UI_MONITOR"]["value"], (0, vertical_size+50))
+        self.__move_window_to_screen_nr(
+            settings_window, 
+            self.SETTINGS["UI_MONITOR"]["value"], 
+            (0, int(self.SETTINGS["MAIN_UI_SIZE"]["value"].split("x")[1]) + 50)
+        )
 
-        # Create a Canvas and a scrollbar
-        canvas = tk.Canvas(settings_window)
-        scrollbar = ttk.Scrollbar(settings_window, orient="vertical", command=canvas.yview)
+        container = ttk.Frame(settings_window)
+        container.pack(fill="both", expand=True, padx=10, pady=10)
+
+        canvas = tk.Canvas(container)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        def _on_mouse_wheel(event):
+            canvas.yview_scroll(-1 * (event.delta // 120), "units")
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        # Create a frame inside the canvas to hold the widgets
-        canvas_frame = ttk.Frame(canvas)
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
 
-        ttk.Label(canvas_frame, text="Here you can change your settings. Be careful to enter valid values. Press save settings at the bottom to save it", wraplength=350).pack(pady=(10, 20))
+        canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
-        inputs: dict[ttk.Entry] = {}
-        for key, setting in self.SETTINGS.items():
-            ttk.Label(canvas_frame, text=f"{key}:").pack(anchor="w", padx=10)
-            if isinstance(setting["value"], dict):
-                # Warning label for dictionary settings
-                ttk.Label(canvas_frame, text=f"⚠️ Be VERY careful when modifying {key}!\nEditing this incorrectly can cause crashes.", foreground="red", wraplength=350).pack(anchor="w", padx=10, pady=(0, 5))
-            input_field = ttk.Entry(canvas_frame)
-            input_field.insert(0, str(setting["value"]))
-            input_field.pack(fill="x", padx=10, pady=5)
-            inputs[key] = input_field
+        inputs = {}
+
+        def create_input(parent, key, setting):
+            """Create input widget based on setting type."""
+            ttk.Label(parent, text=f"{key}:").pack(anchor="w", padx=10, pady=(10, 0))
+            setting_val = setting["value"]
+
+            if isinstance(setting_val, dict):
+                frame = ttk.Frame(parent)
+                frame.pack(fill="x", padx=10, pady=5)
+
+                nested_inputs = {}
+                for key, setting in setting_val.items():
+                    create_input(frame, key, setting)
+                    nested_inputs[key] = inputs[key]
+
+                inputs[key] = nested_inputs
+
+            elif setting["type"] == "bool":
+                bool_input_variable = tk.BooleanVar(value=setting_val)
+                checkbutton = ttk.Checkbutton(parent, variable=bool_input_variable)
+                checkbutton.pack(anchor="w", padx=10, pady=5)
+                inputs[key] = bool_input_variable
+
+            elif setting["type"] in ["int", "float"]:
+                def validate_input(value):
+                    if setting["type"] == "int":
+                        return value.isdigit()
+                    elif setting["type"] == "float":
+                        return value.replace(".", "").isdigit()
+
+                validate_cmd = parent.register(validate_input)
+                entry = ttk.Entry(parent, validate="key", validatecommand=(validate_cmd, "%P"))
+                entry.insert(0, str(setting_val))
+                entry.pack(fill="x", padx=10, pady=5)
+                inputs[key] = entry
+
+            else:  # Default to string input
+                entry = ttk.Entry(parent)
+                entry.insert(0, str(setting_val))
+                entry.pack(fill="x", padx=10, pady=5)
+                inputs[key] = entry
 
         def save_settings():
             if self.process is not None:
                 messagebox.showwarning("Warning", "Can't save settings when the program is running")
                 return
-            
+
             result = self.SETTINGS
-            input_field: ttk.Entry
-            for key, input_field in inputs.items():
-                new_value = input_field.get()
-                result[key]["value"] = new_value
-            
-            result = utils.configure_types(result)
 
-            if isinstance(result, tuple) and result[0] == None: # This means it failed
-                messagebox.showerror("Error", f"Invalid data type for: '{result[1]}', expected {result[2]}")
-                return
+            try:
+                result = utils.configure_types(result)
 
-            utils.write_settings(self.SETTINGS)
-            self.SETTINGS = utils.get_settings()
-            
-            settings_window.destroy()
-            messagebox.showinfo("Info", "Settings saved")
+                if isinstance(result, tuple) and result[0] is None:  # Validation failed
+                    messagebox.showerror("Error", f"Invalid data type for: '{result[1]}', expected {result[2]}")
+                    return
 
-        save_button = ttk.Button(canvas_frame, text="Save", command=save_settings)
-        save_button.pack(pady=20)
+                utils.write_settings(self.SETTINGS)
+                self.SETTINGS = utils.get_settings()
 
-        # Add canvas and scrollbar to the settings window
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+                settings_window.destroy()
+                messagebox.showinfo("Info", "Settings saved")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred while saving settings: {e}")
 
-        # Create a window on the canvas to contain the frame
-        canvas.create_window((0, 0), window=canvas_frame, anchor="nw")
+        ttk.Label(scrollable_frame, text="Here you can change your settings. Be careful to enter valid values. Press save settings at the bottom to save it.", wraplength=350).pack(pady=(10, 20))
 
-        # Update the scrollable region of the canvas
-        canvas_frame.update_idletasks()
-        canvas.config(scrollregion=canvas.bbox("all"))
+        for key, setting in self.SETTINGS.items():
+            create_input(scrollable_frame, key, setting)
 
-        # Bind the mouse scroll wheel to scroll the canvas
-        def on_mouse_wheel(event):
-            if canvas.winfo_exists:
-                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-
-        canvas.bind_all("<MouseWheel>", on_mouse_wheel)
+        save_button = ttk.Button(scrollable_frame, text="Save Settings", command=save_settings)
+        save_button.pack(pady=10)
 
 if __name__ == "__main__":
     root = tk.Tk()

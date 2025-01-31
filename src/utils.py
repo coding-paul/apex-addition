@@ -173,7 +173,7 @@ def scale_coordinates(original_coords: tuple, from_resolution: tuple[int, int], 
         new_y2 = int(y2 * height_scaling_factor)
         return (new_x1, new_y1, new_x2, new_y2)
     
-def configure_types(obj: dict[str, dict]) -> dict[str, dict] | tuple[None, str, str]:
+def configure_types(obj: dict[str, dict]) -> dict[str, dict] | tuple[None, str, str, Exception]:
     """
     A function to turn values in specified types
 
