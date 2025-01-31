@@ -219,7 +219,7 @@ class App:
 
         inputs = {}
 
-        def create_input(parent, key, setting):
+        def create_input(parent, key: str, setting: dict):
             """Create input widget based on setting type."""
             ttk.Label(parent, text=f"{key}:").pack(anchor="w", padx=10, pady=(10, 0))
             setting_val = setting["value"]
@@ -229,9 +229,9 @@ class App:
                 frame.pack(fill="x", padx=10, pady=5)
 
                 nested_inputs = {}
-                for key, setting in setting_val.items():
-                    create_input(frame, key, setting)
-                    nested_inputs[key] = inputs[key]
+                for subkey, subsetting in setting_val.items():
+                    create_input(frame, subkey, subsetting)
+                    nested_inputs[subkey] = inputs[subkey]
 
                 inputs[key] = nested_inputs
 
