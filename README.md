@@ -15,24 +15,26 @@ The following prerequisites must be installed on the system:
 
 ### Git
 
-A guide on how to download and install **Git** can be found [here](https://learn.microsoft.com/de-de/devops/develop/git/install-and-set-up-git)
+A guide on how to download and install **Git** can be found [here](https://learn.microsoft.com/de-de/devops/develop/git/install-and-set-up-git) <br/>
+Has to be added to the environment variables otherwise you will get the error "the command **git** was not found" later on
 
 ### Python3.11
 
 A guide on how to download and install **Python** can be found [here](https://www.simplilearn.com/tutorials/python-tutorial/python-installation-on-windows) <br/>
+Has to be added to the environment variables otherwise you will get the error "the command **python** was not found" later on
 
 ### Visual Studio Code (VSCode)
 
-A guide on how to download and install **VSCode** can be found [here](https://www.gitkraken.com/blog/vs-code-download)<br/>
+A guide on how to download and install **VSCode** can be found [here](https://www.gitkraken.com/blog/vs-code-download) <br/>
 Also the extention python is needed.
 
 ### Tesseract
 
-Can be downloaded from the GitHub by UB Mannheim [here](https://github.com/tesseract-ocr/tesseract/releases/download/5.5.0/tesseract-ocr-w64-setup-5.5.0.20241111.exe), install it and save your path if you choose to install it on a different directory then the default local installment
+Can be downloaded from the GitHub by UB Mannheim [here](https://github.com/tesseract-ocr/tesseract/releases/download/5.5.0/tesseract-ocr-w64-setup-5.5.0.20241111.exe), install it and save your path if you choose to install it on a different directory then the default local installment <br/>
 
 ### Apex Legends
 
-A guide on how to download and install **Apex Legends** can be found [here](https://www.hp.com/us-en/shop/tech-takes/how-to-play-apex-legends-on-pc)
+A guide on how to download and install **Apex Legends** can be found [here](https://www.hp.com/us-en/shop/tech-takes/how-to-play-apex-legends-on-pc) <br/>
 
 ## Installation
 
