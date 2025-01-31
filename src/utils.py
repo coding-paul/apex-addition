@@ -173,7 +173,7 @@ def scale_coordinates(original_coords: tuple, from_resolution: tuple[int, int], 
         new_y2 = int(y2 * height_scaling_factor)
         return (new_x1, new_y1, new_x2, new_y2)
     
-def configure_types(obj: dict[dict]) -> dict[dict] | tuple[None, str, str]:
+def configure_types(obj: dict[str, dict]) -> dict[str, dict] | tuple[None, str, str]:
     """
     A function to turn values in specified types
 
@@ -206,7 +206,7 @@ def configure_types(obj: dict[dict]) -> dict[dict] | tuple[None, str, str]:
             obj[key] = configure_types(setting)
     return obj
 
-def get_settings() -> dict[dict]:
+def get_settings() -> dict[str, dict]:
     path = get_absolute_path("../settings/settings.json")
     with open(path, "r") as file:
         settings = json.load(file)
@@ -219,7 +219,7 @@ def get_settings() -> dict[dict]:
 
     return result
 
-def write_settings(settings: dict[dict]) -> None:
+def write_settings(settings: dict[str, dict]) -> None:
     path = get_absolute_path("../settings/settings.json")
     with open(path, "w") as file:
             json.dump(settings, file, indent=2)
